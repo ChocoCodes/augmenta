@@ -127,3 +127,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22b73fec0d5a64bf8919900fba489406, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotFighter
+  jabDistance: 0.12
+  jabLeanAngle: 20
+  jabSpeed: 12
