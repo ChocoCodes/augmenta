@@ -9,7 +9,9 @@ public class VoiceCommander : MonoBehaviour
 
     [SerializeField] private bool autoListen = true;
     [SerializeField] private float restartDelaySeconds = 0.2f;
-    [SerializeField] private string jabIntentName = "Command_Jab";
+    [SerializeField] private string oneIntentName = "one";
+    [SerializeField] private string twoIntentName = "two";
+    [SerializeField] private string threeIntentName = "three";
     [SerializeField] private float minIntentConfidence = 0.4f;
 
     private float nextListenTime;
@@ -61,7 +63,7 @@ public class VoiceCommander : MonoBehaviour
         Debug.Log("AI Transcribed: " + transcription);
 
         var intents = response["intents"];
-        bool jabTriggered = false;
+        bool commandTriggered = false;
         
         if (intents != null && intents.Count > 0)
         {
@@ -72,39 +74,59 @@ public class VoiceCommander : MonoBehaviour
             {
                 Debug.Log("AI Heard Intent: " + intentName + " (Conf: " + confidence + ")");
 
-                if (string.Equals(intentName, jabIntentName, System.StringComparison.OrdinalIgnoreCase)
-                    || intentName.ToLower().Contains("jab"))
-                {
-                    jabTriggered = TryTriggerJab("intent");
-                }
+                commandTriggered = TryTriggerCommand(intentName, "intent");
             }
         }
 
-        if (!jabTriggered && !string.IsNullOrEmpty(transcription)
-            && transcription.ToLower().Contains("jab"))
+        if (!commandTriggered && !string.IsNullOrEmpty(transcription))
         {
-            jabTriggered = TryTriggerJab("transcription fallback");
+            commandTriggered = TryTriggerCommand(transcription, "transcription fallback");
         }
 
-        if (!jabTriggered)
+        if (!commandTriggered)
         {
-            Debug.Log("VoiceCommander: Jab not triggered from this response.");
+            Debug.Log("VoiceCommander: No command triggered from this response.");
         }
 
         nextListenTime = Time.time + restartDelaySeconds;
     }
 
-    bool TryTriggerJab(string source)
+    bool TryTriggerCommand(string commandText, string source)
     {
         if (robotFighter == null)
         {
-            Debug.LogError("VoiceCommander: RobotFighter reference is missing, cannot jab.");
+            Debug.LogError("VoiceCommander: RobotFighter reference is missing, cannot trigger command.");
             return false;
         }
 
-        Debug.Log("VoiceCommander: Triggering jab via " + source + ".");
-        robotFighter.PerformJab();
-        return true;
+        string normalizedCommand = commandText.Trim().ToLowerInvariant();
+
+        if (string.Equals(normalizedCommand, oneIntentName, System.StringComparison.OrdinalIgnoreCase)
+            || normalizedCommand.Contains("one"))
+        {
+            Debug.Log("VoiceCommander: Triggering one via " + source + ".");
+            robotFighter.PerformOne();
+            return true;
+        }
+
+        if (string.Equals(normalizedCommand, twoIntentName, System.StringComparison.OrdinalIgnoreCase)
+            || normalizedCommand.Contains("two"))
+        {
+            Debug.Log("VoiceCommander: Triggering two via " + source + ".");
+            robotFighter.PerformTwo();
+            return true;
+        }
+
+        if (string.Equals(normalizedCommand, threeIntentName, System.StringComparison.OrdinalIgnoreCase)
+            || normalizedCommand.Contains("three"))
+        {
+            Debug.Log("VoiceCommander: Triggering three via " + source + ".");
+            robotFighter.PerformThree();
+            return true;
+        }
+
+        Debug.Log("VoiceCommander: Command not recognized: " + commandText);
+        return false;
     }
 
     void OnDestroy()

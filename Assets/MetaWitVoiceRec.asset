@@ -35,9 +35,9 @@ MonoBehaviour:
     isPrivate: 1
     createdAt: 2026-03-23T02:06:35-0700
     trainingStatus: 1
-    lastTrainDuration: 87
-    lastTrainedAt: 2026-03-23T02:12:36-0700
-    nextTrainAt: 2026-03-23T02:11:09-0700
+    lastTrainDuration: 294
+    lastTrainedAt: 2026-03-23T02:48:06-0700
+    nextTrainAt: 2026-03-23T02:43:12-0700
     intents:
     - id: 1364366775455119
       name: Command_Jab
