@@ -1151,6 +1151,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: midas
       objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 28bebecc337018149b9c0cd488e50e28, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2320,6 +2324,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6520841952438655053, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.40152165
+      objectReference: {fileID: 0}
+    - target: {fileID: -6520841952438655053, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.57861114
+      objectReference: {fileID: 0}
+    - target: {fileID: -6520841952438655053, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.5945239
+      objectReference: {fileID: 0}
+    - target: {fileID: -6520841952438655053, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.3879832
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
       propertyPath: m_Name
       value: atom
@@ -2331,6 +2351,18 @@ PrefabInstance:
     - target: {fileID: 2644381173485875662, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
       propertyPath: m_LocalPosition.z
       value: 2.026
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 56461adcf9c09674fb467f3dc02b18da, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_AnimatePhysics
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 35a8861bd49f0a446b2e15e506514fde, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
