@@ -3,6 +3,10 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
+
+[System.Serializable]
+public class RobotPlacedEvent : UnityEvent<RobotController> {}
 
 public class ARPlacementManager : MonoBehaviour
 {
@@ -10,6 +14,9 @@ public class ARPlacementManager : MonoBehaviour
     public GameObject placementIndicator;
     public GameObject arenaPrefab;
     public GameObject robotPrefab;
+
+    [Header("Events")]
+    public RobotPlacedEvent OnRobotPlaced;
     
     private ARRaycastManager raycastManager;
     private ARPlaneManager planeManager;
@@ -136,6 +143,7 @@ public class ARPlacementManager : MonoBehaviour
             
             Vector3 robotSpawnPos = placementPose.position + Vector3.up * 0.05f;
             GameObject spawnedRobot = Instantiate(robotPrefab, robotSpawnPos, placementPose.rotation);
+            RobotController controller = spawnedRobot.GetComponent<RobotController>();
 
             // -----------------------------
 
@@ -149,6 +157,11 @@ public class ARPlacementManager : MonoBehaviour
                 {
                     plane.gameObject.SetActive(false);
                 }
+            }
+
+            if (controller != null)
+            {
+                OnRobotPlaced?.Invoke(controller);
             }
         }
 }

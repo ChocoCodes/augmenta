@@ -18,10 +18,16 @@ public class RobotController : MonoBehaviour
 
     private void Awake()
     {
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
         characterController = GetComponent<CharacterController>();
         
-        // Fix for small scales: Reduce the collision buffer and minimum move distance
+        if (animator != null)
+        {
+            // Keep AlwaysAnimate to ensure animations play reliably in AR
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            Debug.Log($"<color=green>Robot Animator Ready.</color> Controller: {animator.runtimeAnimatorController?.name}");
+        }
+        
         if (characterController != null)
         {
             characterController.skinWidth = 0.001f; 
@@ -30,7 +36,6 @@ public class RobotController : MonoBehaviour
 
         playerControls = new PlayerControls();
         mainCamera = Camera.main;
-        if (mainCamera == null) mainCamera = FindFirstObjectByType<Camera>();
     }
 
     private void OnEnable()
@@ -47,15 +52,8 @@ public class RobotController : MonoBehaviour
         playerControls.Player.Disable();
     }
 
-    private void OnMovePerformed(InputAction.CallbackContext context)
-    {
-        moveInput = context.ReadValue<Vector2>();
-    }
-
-    private void OnMoveCanceled(InputAction.CallbackContext context)
-    {
-        moveInput = Vector2.zero;
-    }
+    private void OnMovePerformed(InputAction.CallbackContext context) => moveInput = context.ReadValue<Vector2>();
+    private void OnMoveCanceled(InputAction.CallbackContext context) => moveInput = Vector2.zero;
 
     private void Update()
     {
@@ -79,39 +77,15 @@ public class RobotController : MonoBehaviour
 
     private void MoveRobot()
     {
-        if (moveInput.sqrMagnitude < 0.01f)
-        {
-            if (animator != null) animator.SetBool("isMoving", false);
-            return;
-        }
+        if (moveInput.sqrMagnitude < 0.01f) return;
 
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-            if (mainCamera == null) mainCamera = FindFirstObjectByType<Camera>();
-            if (mainCamera == null) return;
-        }
+        if (mainCamera == null) mainCamera = Camera.main;
+        if (mainCamera == null) return;
 
-        // --- Improved Camera Perspective Logic ---
-        Vector3 forward = mainCamera.transform.forward;
-        Vector3 right = mainCamera.transform.right;
-
-        // If looking nearly straight down (common in AR), use the camera's "up" projected on the plane as forward
-        if (Mathf.Abs(forward.y) > 0.9f)
-        {
-            forward = Vector3.ProjectOnPlane(mainCamera.transform.up, Vector3.up).normalized;
-        }
-        else
-        {
-            forward.y = 0;
-            forward.Normalize();
-        }
-
-        right.y = 0;
-        right.Normalize();
+        Vector3 forward = Vector3.ProjectOnPlane(mainCamera.transform.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(mainCamera.transform.right, Vector3.up).normalized;
 
         Vector3 moveDirection = (forward * moveInput.y + right * moveInput.x).normalized;
-        // ------------------------------------------
         
         if (moveDirection != Vector3.zero)
         {
@@ -120,32 +94,24 @@ public class RobotController : MonoBehaviour
         }
 
         characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
-        
-        if (animator != null) animator.SetBool("isMoving", true);
     }
 
-    public void TriggerJab()
-    {
-        if (animator != null) animator.SetTrigger("Jab");
-    }
+    public void TriggerJab() => SafeTrigger("Jab");
+    public void TriggerHook() => SafeTrigger("Hook");
+    public void TriggerUppercut() => SafeTrigger("Uppercut");
+    public void TriggerCross() => SafeTrigger("Cross");
 
-    public void TriggerHook()
+    private void SafeTrigger(string triggerName)
     {
-        if (animator != null) animator.SetTrigger("Hook");
-    }
+        if (animator == null) return;
 
-    public void TriggerUppercut()
-    {
-        if (animator != null) animator.SetTrigger("Uppercut");
-    }
+        // Reset all other triggers to prevent overlapping animation requests
+        animator.ResetTrigger("Jab");
+        animator.ResetTrigger("Hook");
+        animator.ResetTrigger("Uppercut");
+        animator.ResetTrigger("Cross");
 
-    public void TriggerCross()
-    {
-        if (animator != null) animator.SetTrigger("Cross");
-    }
-
-    public void TriggerBlock()
-    {
-        if (animator != null) animator.SetTrigger("Block");
+        animator.SetTrigger(triggerName);
+        Debug.Log($"<color=cyan>Trigger Sent to Controller:</color> {triggerName}");
     }
 }

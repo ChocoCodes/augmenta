@@ -1209,6 +1209,66 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 739002417}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 739002417}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ActivateVoiceControl
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ActivateVoiceControl
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: VoiceIntentProcessor, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: VoiceIntentProcessor, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnRobotPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 8943236500446040285, guid: 48cb3fb68c91eb94999fd99957eb0cae, type: 3}
+      propertyPath: OnObjectsPlaced.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1499,37 +1559,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 451820663}
   m_CullTransparentMesh: 1
---- !u!1 &485158776
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 485158777}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &485158777
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 485158776}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.52169, y: 0, z: -7.25949}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &508700756
 GameObject:
   m_ObjectHideFlags: 0
@@ -2372,7 +2401,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 718493392}
   m_CullTransparentMesh: 1
---- !u!1 &739657163
+--- !u!1 &739002414
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2380,8 +2409,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 739657165}
-  - component: {fileID: 739657164}
+  - component: {fileID: 739002416}
+  - component: {fileID: 739002415}
+  - component: {fileID: 739002417}
   m_Layer: 0
   m_Name: Voice Manager
   m_TagString: Untagged
@@ -2389,13 +2419,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &739657164
+--- !u!114 &739002415
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 739657163}
+  m_GameObject: {fileID: 739002414}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 28779cfed47441a42a6cd4fb49c8dc89, type: 3}
@@ -2515,13 +2545,13 @@ MonoBehaviour:
   usePlatformServices: 0
   enableConsoleLogging: 0
   sendTranscriptionEventsForMessages: 0
---- !u!4 &739657165
+--- !u!4 &739002416
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 739657163}
+  m_GameObject: {fileID: 739002414}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -6.52169, y: 0, z: -7.25949}
@@ -2530,6 +2560,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &739002417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 739002414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8756921546534ad285e48cd8558a45c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VoiceIntentProcessor
+  voiceService: {fileID: 739002415}
 --- !u!1 &791333383
 GameObject:
   m_ObjectHideFlags: 0
@@ -8741,5 +8784,4 @@ SceneRoots:
   - {fileID: 2099970469}
   - {fileID: 1893451117}
   - {fileID: 331264285}
-  - {fileID: 485158777}
-  - {fileID: 739657165}
+  - {fileID: 739002416}
