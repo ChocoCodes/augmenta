@@ -9,12 +9,12 @@ public class RobotController : MonoBehaviour
     public float rotationSmoothSpeed = 10f;
 
     [Header("Movement Settings")]
-    public float moveSpeed = 3.5f; // Increased slightly to compensate for longer rests
+    public float moveSpeed = 3.5f; 
     public float gravity = 9.81f;
 
     [Header("Boxing Rhythm")]
-    [Range(0.1f, 5f)] public float stepFrequency = 1.0f; // Slower overall rhythm
-    [Range(0.1f, 1f)] public float stepDuration = 0.35f; // Quicker push, longer plant 
+    [Range(0.1f, 5f)] public float stepFrequency = 1.0f; 
+    [Range(0.1f, 1f)] public float stepDuration = 0.35f;  
     
     [Header("Arena Bounds")]
     private Vector3 arenaCenter;
@@ -101,7 +101,6 @@ public class RobotController : MonoBehaviour
         CalculateMovement();
         
         characterController.Move((moveVelocity + verticalVelocity) * Time.deltaTime);
-        
         RestrictToArena();
     }
 
@@ -182,20 +181,9 @@ public class RobotController : MonoBehaviour
 
     private void AlwaysFaceTarget()
     {
-        if (target == null) 
+        if (target == null || IsBusy()) 
         {
             pivotContribution = 0f;
-            return;
-        }
-
-        var stateInfo = animator != null ? animator.GetCurrentAnimatorStateInfo(0) : default;
-        bool isAttacking = stateInfo.IsName("Jab") || stateInfo.IsName("Hook") || 
-                           stateInfo.IsName("Uppercut") || stateInfo.IsName("Cross") ||
-                           stateInfo.IsName("Hit") || stateInfo.IsName("Knockout");
-
-        if (isAttacking)
-        {
-            pivotContribution = 0f; 
             return;
         }
 
@@ -205,8 +193,6 @@ public class RobotController : MonoBehaviour
         if (direction.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            
-            // Constantly and smoothly rotate to face target
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothSpeed * Time.deltaTime);
             
             float angleDiff = Vector3.Angle(transform.forward, direction);
@@ -237,10 +223,22 @@ public class RobotController : MonoBehaviour
 
     private void CalculateMovement()
     {
+        // Smoothly return to idle if an attack interrupts movement
+        if (IsBusy())
+        {
+            moveVelocity = Vector3.zero;
+            if (animator != null)
+            {
+                animator.SetFloat("MoveX", Mathf.Lerp(animator.GetFloat("MoveX"), 0f, Time.deltaTime * 15f));
+                animator.SetFloat("MoveZ", Mathf.Lerp(animator.GetFloat("MoveZ"), 0f, Time.deltaTime * 15f));
+            }
+            return;
+        }
+
         Vector3 moveDirection = Vector3.zero;
         bool isMovingIntent = moveInput.sqrMagnitude > 0.01f;
 
-        if (!IsBusy() && isMovingIntent && mainCamera != null)
+        if (isMovingIntent && mainCamera != null)
         {
             Vector3 camForward = Vector3.ProjectOnPlane(mainCamera.transform.forward, Vector3.up).normalized;
             Vector3 camRight = Vector3.ProjectOnPlane(mainCamera.transform.right, Vector3.up).normalized;
@@ -255,21 +253,18 @@ public class RobotController : MonoBehaviour
             Vector3 localMove = moveDirection != Vector3.zero ? transform.InverseTransformDirection(moveDirection) : Vector3.zero;
             
             float targetX = 0f;
-            if (Mathf.Abs(localMove.x) > 0.1f)
-            {
-                targetX = Mathf.Sign(localMove.x);
-            }
-            else if (Mathf.Abs(pivotContribution) > 0.01f)
-            {
-                targetX = pivotContribution * 0.5f;
-            }
+            if (Mathf.Abs(localMove.x) > 0.1f) targetX = Mathf.Sign(localMove.x);
+            else if (Mathf.Abs(pivotContribution) > 0.01f) targetX = pivotContribution * 0.5f;
 
             bool isActivelyPivoting = Mathf.Abs(pivotContribution) > 0.01f;
-            // Increased the minimum blend to 0.5f so they look active while planted
             float animIntensity = (isMovingIntent || isActivelyPivoting) ? Mathf.Max(currentPulse, 0.5f) : currentPulse;
             
-            animator.SetFloat("MoveX", targetX * animIntensity);
-            animator.SetFloat("MoveZ", localMove.z * animIntensity);
+            float finalMoveX = targetX * animIntensity;
+            float finalMoveZ = localMove.z * animIntensity;
+
+            // FIX: Smoothly Lerp the animator parameters to prevent snappy transitions when inputs change rapidly
+            animator.SetFloat("MoveX", Mathf.Lerp(animator.GetFloat("MoveX"), finalMoveX, Time.deltaTime * 12f));
+            animator.SetFloat("MoveZ", Mathf.Lerp(animator.GetFloat("MoveZ"), finalMoveZ, Time.deltaTime * 12f));
         }
     }
 
