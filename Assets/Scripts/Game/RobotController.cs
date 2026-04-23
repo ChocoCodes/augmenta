@@ -15,6 +15,11 @@ public class RobotController : MonoBehaviour
     [Header("Boxing Rhythm")]
     [Range(0.1f, 5f)] public float stepFrequency = 1.0f; 
     [Range(0.1f, 1f)] public float stepDuration = 0.35f;  
+
+    [Header("Combat Detection")]
+    public float hitRange = 2.0f;
+    public float hitAngle = 90f;
+    public float hitDelay = 0.35f; // Player might be slightly faster
     
     [Header("Arena Bounds")]
     private Vector3 arenaCenter;
@@ -65,7 +70,7 @@ public class RobotController : MonoBehaviour
         if (animator != null)
         {
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            animator.applyRootMotion = false;
+            animator.applyRootMotion = true;
         }
 
         playerControls = new PlayerControls();
@@ -99,8 +104,30 @@ public class RobotController : MonoBehaviour
         AlwaysFaceTarget();
         ApplyGravity();
         CalculateMovement();
+    }
+
+    private void OnAnimatorMove()
+    {
+        if (characterController == null || animator == null) return;
+
+        Vector3 finalMove;
         
-        characterController.Move((moveVelocity + verticalVelocity) * Time.deltaTime);
+        if (IsBusy())
+        {
+            // Use root motion (animation physics) for combat states
+            finalMove = animator.deltaPosition;
+            transform.rotation *= animator.deltaRotation;
+        }
+        else
+        {
+            // During locomotion, use manual pulse-based movement
+            finalMove = moveVelocity * Time.deltaTime;
+        }
+
+        // Apply vertical velocity (gravity)
+        finalMove.y += verticalVelocity.y * Time.deltaTime;
+        
+        characterController.Move(finalMove);
         RestrictToArena();
     }
 
@@ -285,17 +312,89 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    public bool TriggerJab() => SafeTrigger("Jab");
-    public bool TriggerHook() => SafeTrigger("Hook");
-    public bool TriggerUppercut() => SafeTrigger("Uppercut");
-    public bool TriggerCross() => SafeTrigger("Cross");
+    public bool TriggerJab() => SafeTrigger("Jab") && ScheduleHitCheck();
+    public bool TriggerHook() => SafeTrigger("Hook") && ScheduleHitCheck();
+    public bool TriggerUppercut() => SafeTrigger("Uppercut") && ScheduleHitCheck();
+    public bool TriggerCross() => SafeTrigger("Cross") && ScheduleHitCheck();
     public bool TriggerBlock() => SafeTrigger("Block");
-    public bool TriggerHit() => SafeTrigger("Hit");
-    public bool TriggerKnockout() => SafeTrigger("Knockout");
+    public bool TriggerHit() => SafeTrigger("Hit", true);
+    public bool TriggerKnockout() => SafeTrigger("Knockout", true);
 
-    private bool SafeTrigger(string triggerName)
+    private bool ScheduleHitCheck()
     {
-        if (animator == null || IsBusy() || currentPulse > 0.001f) return false;
+        Invoke(nameof(CheckForHit), hitDelay);
+        return true;
+    }
+
+    private void CheckForHit()
+    {
+        if (target == null) return;
+
+        // Use 2D distance to be more robust against Y-offset in AR
+        Vector3 posFlat = transform.position; posFlat.y = 0;
+        Vector3 targetFlat = target.position; targetFlat.y = 0;
+        
+        float dist = Vector3.Distance(posFlat, targetFlat);
+        float scale = transform.localScale.y;
+        float adjustedHitRange = hitRange * scale;
+        
+        if (dist <= adjustedHitRange)
+        {
+            Vector3 dirToTarget = (targetFlat - posFlat).normalized;
+            if (dirToTarget == Vector3.zero) dirToTarget = transform.forward;
+
+            float angle = Vector3.Angle(transform.forward, dirToTarget);
+
+            if (angle <= hitAngle)
+            {
+                var enemy = target.GetComponent<EnemyAIController>();
+                if (enemy != null)
+                {
+                    enemy.TakeHit();
+                    Debug.Log($"<color=green>Player Hit SUCCESS:</color> Enemy at {dist:F2}m, Angle: {angle:F1}°");
+                }
+            }
+            else
+            {
+                Debug.Log($"<color=yellow>Player Hit MISSED (Angle):</color> Angle {angle:F1}° > {hitAngle}°");
+            }
+        }
+        else
+        {
+            Debug.Log($"<color=red>Player Hit MISSED (Range):</color> Distance {dist:F2}m > {adjustedHitRange:F2}m");
+        }
+    }
+
+    public void TakeHit()
+    {
+        if (animator == null) return;
+
+        // Check if we are blocking
+        var state = animator.GetCurrentAnimatorStateInfo(0);
+        if (state.IsName("Block"))
+        {
+            Debug.Log("Player blocked the hit!");
+            return;
+        }
+
+        TriggerHit();
+    }
+
+    private bool SafeTrigger(string triggerName, bool force = false)
+    {
+        if (animator == null) return false;
+        
+        bool busy = IsBusy();
+        // Relaxed: Allow attacks even if moving (currentPulse > 0)
+        if (!force && busy) return false;
+
+        // If forcing a hit, we want to interrupt current animations
+        // but not if we are already in a Hit or Knockout state
+        if (force)
+        {
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Hit") || state.IsName("Knockout")) return false;
+        }
         
         animator.ResetTrigger("Jab");
         animator.ResetTrigger("Hook");

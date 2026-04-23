@@ -34,11 +34,14 @@ MonoBehaviour:
     lang: en
     isPrivate: 0
     createdAt: 2026-04-21T02:03:19-0700
-    trainingStatus: 1
+    trainingStatus: 2
     lastTrainDuration: 280
     lastTrainedAt: 2026-04-21T02:20:10-0700
-    nextTrainAt: 2026-04-21T02:15:30-0700
+    nextTrainAt: 2026-04-22T20:07:54-0700
     intents:
+    - id: 1706994610294781
+      name: Block
+      entities: []
     - id: 2387263178441167
       name: Cross
       entities: []

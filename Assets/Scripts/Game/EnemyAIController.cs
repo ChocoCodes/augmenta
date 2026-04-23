@@ -15,7 +15,7 @@ public class EnemyAIController : MonoBehaviour
     [Header("Movement Settings")]
     public float moveSpeed = 2.5f; 
     public float gravity = 9.81f;
-    public float optimalDistance = 0.5f; 
+    public float optimalDistance = 1.0f; 
     public float distanceThreshold = 0.15f; 
 
     [Header("Boxing Rhythm")]
@@ -25,7 +25,13 @@ public class EnemyAIController : MonoBehaviour
     [Header("Combat AI")]
     public float minAttackInterval = 2f;
     public float maxAttackInterval = 4f;
+    public float blockChance = 0.25f; // Chance to block an incoming attack
     
+    [Header("Combat Detection")]
+    public float hitRange = 2.0f;
+    public float hitAngle = 90f;
+    public float hitDelay = 0.4f;
+
     [Header("Arena Bounds")]
     private Vector3 arenaCenter;
     private float arenaHalfSize = 0.45f;
@@ -68,6 +74,7 @@ public class EnemyAIController : MonoBehaviour
     private float nextAttackTime;
     private float sideStepChance = 0.4f;
     private float sideStepDir = 1f;
+    private bool playerWasAttacking = false;
     
     // FIX 1: Lock variable to prevent rapid-fire direction flipping
     private bool hasRolledSideStep = false; 
@@ -80,7 +87,7 @@ public class EnemyAIController : MonoBehaviour
         if (animator != null)
         {
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            animator.applyRootMotion = false;
+            animator.applyRootMotion = true;
         }
         
         SetNextAttackTime();
@@ -106,8 +113,30 @@ public class EnemyAIController : MonoBehaviour
         AlwaysFaceTarget();
         ApplyGravity();
         HandleAIBehavior();
+    }
 
-        characterController.Move((moveVelocity + verticalVelocity) * Time.deltaTime);
+    private void OnAnimatorMove()
+    {
+        if (characterController == null || animator == null) return;
+
+        Vector3 finalMove;
+
+        if (IsBusy())
+        {
+            // Use root motion (animation physics) for combat states
+            finalMove = animator.deltaPosition;
+            transform.rotation *= animator.deltaRotation;
+        }
+        else
+        {
+            // During locomotion, use manual pulse-based movement
+            finalMove = moveVelocity * Time.deltaTime;
+        }
+
+        // Apply vertical velocity (gravity)
+        finalMove.y += verticalVelocity.y * Time.deltaTime;
+
+        characterController.Move(finalMove);
         RestrictToArena();
     }
 
@@ -243,6 +272,32 @@ public class EnemyAIController : MonoBehaviour
             return;
         }
 
+        // --- Defensive Reaction ---
+        if (target != null)
+        {
+            Animator targetAnimator = target.GetComponent<Animator>();
+            if (targetAnimator != null)
+            {
+                var targetState = targetAnimator.GetCurrentAnimatorStateInfo(0);
+                bool isPlayerAttacking = IsAttackState(targetState);
+
+                if (isPlayerAttacking && !playerWasAttacking)
+                {
+                    float distToPlayer = Vector3.Distance(transform.position, target.position);
+                    if (distToPlayer < (optimalDistance + distanceThreshold) * 1.5f)
+                    {
+                        if (Random.value < blockChance)
+                        {
+                            TriggerBlock();
+                            playerWasAttacking = true; // Set to true to avoid double roll this attack
+                            return;
+                        }
+                    }
+                }
+                playerWasAttacking = isPlayerAttacking;
+            }
+        }
+
         float scale = transform.localScale.y;
         float maxAttackDist = (optimalDistance + distanceThreshold) * scale;
         float minAttackDist = (optimalDistance - distanceThreshold) * scale;
@@ -340,29 +395,107 @@ public class EnemyAIController : MonoBehaviour
 
     private void SetNextAttackTime() => nextAttackTime = Random.Range(minAttackInterval, maxAttackInterval);
 
+    private bool IsAttackState(AnimatorStateInfo state)
+    {
+        return state.IsName("Jab") || state.IsName("Hook") || state.IsName("Uppercut") || state.IsName("Cross");
+    }
+
     private bool PerformRandomAttack()
     {
-        int rand = Random.Range(0, 4);
+        int rand = Random.Range(0, 5);
         switch (rand)
         {
             case 0: return TriggerJab();
             case 1: return TriggerCross();
             case 2: return TriggerHook();
-            default: return TriggerUppercut();
+            case 3: return TriggerUppercut();
+            default: return TriggerBlock();
         };
     }
 
-    public bool TriggerJab() => SafeTrigger("Jab");
-    public bool TriggerHook() => SafeTrigger("Hook");
-    public bool TriggerUppercut() => SafeTrigger("Uppercut");
-    public bool TriggerCross() => SafeTrigger("Cross");
+    public bool TriggerJab() => SafeTrigger("Jab") && ScheduleHitCheck();
+    public bool TriggerHook() => SafeTrigger("Hook") && ScheduleHitCheck();
+    public bool TriggerUppercut() => SafeTrigger("Uppercut") && ScheduleHitCheck();
+    public bool TriggerCross() => SafeTrigger("Cross") && ScheduleHitCheck();
     public bool TriggerBlock() => SafeTrigger("Block");
-    public bool TriggerHit() => SafeTrigger("Hit");
-    public bool TriggerKnockout() => SafeTrigger("Knockout");
+    public bool TriggerHit() => SafeTrigger("Hit", true);
+    public bool TriggerKnockout() => SafeTrigger("Knockout", true);
 
-    private bool SafeTrigger(string triggerName)
+    private bool ScheduleHitCheck()
     {
-        if (animator == null || IsBusy() || currentPulse > 0.001f) return false;
+        Invoke(nameof(CheckForHit), hitDelay);
+        return true;
+    }
+
+    private void CheckForHit()
+    {
+        if (target == null) return;
+
+        // Use 2D distance to be more robust against Y-offset in AR
+        Vector3 posFlat = transform.position; posFlat.y = 0;
+        Vector3 targetFlat = target.position; targetFlat.y = 0;
+        
+        float dist = Vector3.Distance(posFlat, targetFlat);
+        float scale = transform.localScale.y;
+        float adjustedHitRange = hitRange * scale;
+        
+        if (dist <= adjustedHitRange)
+        {
+            Vector3 dirToTarget = (targetFlat - posFlat).normalized;
+            if (dirToTarget == Vector3.zero) dirToTarget = transform.forward;
+
+            float angle = Vector3.Angle(transform.forward, dirToTarget);
+
+            if (angle <= hitAngle)
+            {
+                var player = target.GetComponent<RobotController>();
+                if (player != null)
+                {
+                    player.TakeHit();
+                    Debug.Log($"<color=green>Enemy Hit SUCCESS:</color> Player at {dist:F2}m, Angle: {angle:F1}°");
+                }
+            }
+            else
+            {
+                Debug.Log($"<color=yellow>Enemy Hit MISSED (Angle):</color> Angle {angle:F1}° > {hitAngle}°");
+            }
+        }
+        else
+        {
+            Debug.Log($"<color=red>Enemy Hit MISSED (Range):</color> Distance {dist:F2}m > {adjustedHitRange:F2}m");
+        }
+    }
+
+    public void TakeHit()
+    {
+        if (animator == null) return;
+
+        // Check if we are blocking
+        var state = animator.GetCurrentAnimatorStateInfo(0);
+        if (state.IsName("Block"))
+        {
+            Debug.Log("Enemy blocked the hit!");
+            return;
+        }
+
+        TriggerHit();
+    }
+
+    private bool SafeTrigger(string triggerName, bool force = false)
+    {
+        if (animator == null) return false;
+        
+        bool busy = IsBusy();
+        // Relaxed: Allow attacks even if moving (currentPulse > 0)
+        if (!force && busy) return false;
+
+        // If forcing a hit, we want to interrupt current animations
+        // but not if we are already in a Hit or Knockout state
+        if (force)
+        {
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Hit") || state.IsName("Knockout")) return false;
+        }
         
         animator.ResetTrigger("Jab");
         animator.ResetTrigger("Hook");
