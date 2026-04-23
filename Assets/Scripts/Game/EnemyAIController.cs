@@ -32,6 +32,17 @@ public class EnemyAIController : MonoBehaviour
     public float hitAngle = 90f;
     public float hitDelay = 0.4f;
 
+    [Header("Health & Damage")]
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private float jabDamage = 8f;
+    [SerializeField] private float hookDamage = 12f;
+    [SerializeField] private float uppercutDamage = 18f;
+    [SerializeField] private float crossDamage = 10f;
+
+    private float currentHealth;
+    private float pendingDamage;
+    private bool isDead = false;
+
     [Header("Arena Bounds")]
     private Vector3 arenaCenter;
     private float arenaHalfSize = 0.45f;
@@ -83,6 +94,7 @@ public class EnemyAIController : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
+        currentHealth = maxHealth;
         
         if (animator != null)
         {
@@ -100,6 +112,8 @@ public class EnemyAIController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return;
+
         if (target == null || !target.gameObject.scene.IsValid())
         {
             FindPlayer();
@@ -413,10 +427,46 @@ public class EnemyAIController : MonoBehaviour
         };
     }
 
-    public bool TriggerJab() => SafeTrigger("Jab") && ScheduleHitCheck();
-    public bool TriggerHook() => SafeTrigger("Hook") && ScheduleHitCheck();
-    public bool TriggerUppercut() => SafeTrigger("Uppercut") && ScheduleHitCheck();
-    public bool TriggerCross() => SafeTrigger("Cross") && ScheduleHitCheck();
+    public bool TriggerJab() 
+    {
+        if (SafeTrigger("Jab"))
+        {
+            pendingDamage = jabDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
+    public bool TriggerHook()
+    {
+        if (SafeTrigger("Hook"))
+        {
+            pendingDamage = hookDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
+    public bool TriggerUppercut()
+    {
+        if (SafeTrigger("Uppercut"))
+        {
+            pendingDamage = uppercutDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
+    public bool TriggerCross()
+    {
+        if (SafeTrigger("Cross"))
+        {
+            pendingDamage = crossDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
     public bool TriggerBlock() => SafeTrigger("Block");
     public bool TriggerHit() => SafeTrigger("Hit", true);
     public bool TriggerKnockout() => SafeTrigger("Knockout", true);
@@ -451,8 +501,8 @@ public class EnemyAIController : MonoBehaviour
                 var player = target.GetComponent<RobotController>();
                 if (player != null)
                 {
-                    player.TakeHit();
-                    Debug.Log($"<color=green>Enemy Hit SUCCESS:</color> Player at {dist:F2}m, Angle: {angle:F1}°");
+                    player.TakeHit(pendingDamage);
+                    Debug.Log($"<color=green>Enemy Hit SUCCESS:</color> Player at {dist:F2}m, Angle: {angle:F1}°, Damage: {pendingDamage}");
                 }
             }
             else
@@ -466,9 +516,9 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    public void TakeHit()
+    public void TakeHit(float damage)
     {
-        if (animator == null) return;
+        if (isDead || animator == null) return;
 
         // Check if we are blocking
         var state = animator.GetCurrentAnimatorStateInfo(0);
@@ -478,7 +528,19 @@ public class EnemyAIController : MonoBehaviour
             return;
         }
 
-        TriggerHit();
+        currentHealth -= damage;
+        Debug.Log($"Enemy took {damage} damage! Remaining HP: {currentHealth}");
+
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            isDead = true;
+            TriggerKnockout();
+        }
+        else
+        {
+            TriggerHit();
+        }
     }
 
     private bool SafeTrigger(string triggerName, bool force = false)

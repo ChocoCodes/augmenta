@@ -722,6 +722,11 @@ MonoBehaviour:
   hitRange: 2
   hitAngle: 90
   hitDelay: 0.1
+  maxHealth: 120
+  jabDamage: 8
+  hookDamage: 12
+  uppercutDamage: 18
+  crossDamage: 10
 --- !u!1 &2004551958805635657
 GameObject:
   m_ObjectHideFlags: 0

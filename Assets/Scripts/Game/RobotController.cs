@@ -20,6 +20,17 @@ public class RobotController : MonoBehaviour
     public float hitRange = 2.0f;
     public float hitAngle = 90f;
     public float hitDelay = 0.35f; // Player might be slightly faster
+
+    [Header("Health & Damage")]
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private float jabDamage = 10f;
+    [SerializeField] private float hookDamage = 15f;
+    [SerializeField] private float uppercutDamage = 20f;
+    [SerializeField] private float crossDamage = 12f;
+
+    private float currentHealth;
+    private float pendingDamage;
+    private bool isDead = false;
     
     [Header("Arena Bounds")]
     private Vector3 arenaCenter;
@@ -66,6 +77,7 @@ public class RobotController : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
+        currentHealth = maxHealth;
         
         if (animator != null)
         {
@@ -96,6 +108,8 @@ public class RobotController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return;
+
         if (target == null || !target.gameObject.scene.IsValid()) FindEnemy();
         
         moveVelocity = Vector3.zero;
@@ -312,10 +326,46 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    public bool TriggerJab() => SafeTrigger("Jab") && ScheduleHitCheck();
-    public bool TriggerHook() => SafeTrigger("Hook") && ScheduleHitCheck();
-    public bool TriggerUppercut() => SafeTrigger("Uppercut") && ScheduleHitCheck();
-    public bool TriggerCross() => SafeTrigger("Cross") && ScheduleHitCheck();
+    public bool TriggerJab() 
+    {
+        if (SafeTrigger("Jab"))
+        {
+            pendingDamage = jabDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
+    public bool TriggerHook()
+    {
+        if (SafeTrigger("Hook"))
+        {
+            pendingDamage = hookDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
+    public bool TriggerUppercut()
+    {
+        if (SafeTrigger("Uppercut"))
+        {
+            pendingDamage = uppercutDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
+    public bool TriggerCross()
+    {
+        if (SafeTrigger("Cross"))
+        {
+            pendingDamage = crossDamage;
+            return ScheduleHitCheck();
+        }
+        return false;
+    }
+
     public bool TriggerBlock() => SafeTrigger("Block");
     public bool TriggerHit() => SafeTrigger("Hit", true);
     public bool TriggerKnockout() => SafeTrigger("Knockout", true);
@@ -350,8 +400,8 @@ public class RobotController : MonoBehaviour
                 var enemy = target.GetComponent<EnemyAIController>();
                 if (enemy != null)
                 {
-                    enemy.TakeHit();
-                    Debug.Log($"<color=green>Player Hit SUCCESS:</color> Enemy at {dist:F2}m, Angle: {angle:F1}°");
+                    enemy.TakeHit(pendingDamage);
+                    Debug.Log($"<color=green>Player Hit SUCCESS:</color> Enemy at {dist:F2}m, Angle: {angle:F1}°, Damage: {pendingDamage}");
                 }
             }
             else
@@ -365,9 +415,9 @@ public class RobotController : MonoBehaviour
         }
     }
 
-    public void TakeHit()
+    public void TakeHit(float damage)
     {
-        if (animator == null) return;
+        if (isDead || animator == null) return;
 
         // Check if we are blocking
         var state = animator.GetCurrentAnimatorStateInfo(0);
@@ -377,7 +427,19 @@ public class RobotController : MonoBehaviour
             return;
         }
 
-        TriggerHit();
+        currentHealth -= damage;
+        Debug.Log($"Player took {damage} damage! Remaining HP: {currentHealth}");
+
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            isDead = true;
+            TriggerKnockout();
+        }
+        else
+        {
+            TriggerHit();
+        }
     }
 
     private bool SafeTrigger(string triggerName, bool force = false)
