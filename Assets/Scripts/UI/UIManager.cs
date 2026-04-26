@@ -39,8 +39,15 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Sprite zeusOpenSprite;
     [SerializeField] private Sprite zeusDefeatedSprite;
 
+    [Header("SFX")]
+    [SerializeField] private AudioClip bgm;
 
     private bool matchEnded = false;
+
+    private static void PlayButtonSfx()
+    {
+        AudioManager.GetInstance()?.PlayBtnSfx();
+    }
 
     void Start()
     {
@@ -67,6 +74,7 @@ public class UIManager : MonoBehaviour
         if (mainMenuPanel != null)
             mainMenuPanel.SetActive(true);
 
+        AudioManager.GetInstance().PlayAudio(bgm, true);
         RefreshOpponentSelectState();
         UpdateJoystickVisibility();
     }
@@ -78,6 +86,8 @@ public class UIManager : MonoBehaviour
 
     public void StartGame(GameObject panelToClose, GameObject panelToOpen)
     {
+        PlayButtonSfx();
+
         if (panelToClose != null)
             panelToClose.SetActive(false);
 
@@ -92,6 +102,8 @@ public class UIManager : MonoBehaviour
 
     public void OpenOpponentSelect()
     {
+        PlayButtonSfx();
+
         if (mainMenuPanel != null)
             mainMenuPanel.SetActive(false);
 
@@ -106,6 +118,8 @@ public class UIManager : MonoBehaviour
 
     public void ExitGame()
     {
+        PlayButtonSfx();
+
         #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
         #else
@@ -116,6 +130,8 @@ public class UIManager : MonoBehaviour
     //NOT FINAL. IN GAME SHOULD BE IN ANOTHER SCENE. FOR DEMO PURPOSES
     public void OpenInGamePanel()
     {
+        PlayButtonSfx();
+
         SceneManager.LoadScene("vsMidas");
 
         UpdateJoystickVisibility();
@@ -124,6 +140,8 @@ public class UIManager : MonoBehaviour
     public void ShowPausePanel()
     {
         if (matchEnded) return;
+
+        PlayButtonSfx();
 
         if (pausePanel != null)
             pausePanel.SetActive(true);
@@ -135,6 +153,8 @@ public class UIManager : MonoBehaviour
     public void HidePausePanel()
     {
         if (matchEnded) return;
+
+        PlayButtonSfx();
 
         if (pausePanel != null)
             pausePanel.SetActive(false);
@@ -184,6 +204,8 @@ public class UIManager : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
+        PlayButtonSfx();
+
         matchEnded = false;
         Time.timeScale = 1f;
 
@@ -215,6 +237,8 @@ public class UIManager : MonoBehaviour
 
     public void ReloadScene()
     {
+        PlayButtonSfx();
+
         matchEnded = false;
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -223,6 +247,8 @@ public class UIManager : MonoBehaviour
 
     public void NextScene(string sceneName)
     {
+        PlayButtonSfx();
+
         matchEnded = false;
         Time.timeScale = 1f;
         SceneManager.LoadScene(sceneName);

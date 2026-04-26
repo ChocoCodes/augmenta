@@ -34,7 +34,7 @@ MonoBehaviour:
     lang: en
     isPrivate: 0
     createdAt: 2026-04-21T02:03:19-0700
-    trainingStatus: 2
+    trainingStatus: 3
     lastTrainDuration: 280
     lastTrainedAt: 2026-04-21T02:20:10-0700
     nextTrainAt: 2026-04-22T20:07:54-0700

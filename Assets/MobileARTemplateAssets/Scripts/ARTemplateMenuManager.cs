@@ -15,6 +15,11 @@ namespace UnityEngine.XR.Templates.AR
     /// </summary>
     public class ARTemplateMenuManager : MonoBehaviour
     {
+        static void PlayButtonSfx()
+        {
+            AudioManager.GetInstance()?.PlayBtnSfx();
+        }
+
         [SerializeField]
         [Tooltip("Button that opens the create menu.")]
         Button m_CreateButton;
@@ -320,6 +325,8 @@ namespace UnityEngine.XR.Templates.AR
         /// <param name="objectIndex">The index in the array of the object to spawn with the ObjectSpawner</param>
         public void SetObjectToSpawn(int objectIndex)
         {
+            PlayButtonSfx();
+
             if (m_ObjectSpawner == null)
             {
                 Debug.LogWarning("Object Spawner not configured correctly: no ObjectSpawner set.");
@@ -341,6 +348,8 @@ namespace UnityEngine.XR.Templates.AR
 
         void ShowMenu()
         {
+            PlayButtonSfx();
+
             m_ShowObjectMenu = true;
             m_ObjectMenu.SetActive(true);
             if (!m_ObjectMenuAnimator.GetBool("Show"))
@@ -355,6 +364,8 @@ namespace UnityEngine.XR.Templates.AR
         /// </summary>
         public void ShowHideModal()
         {
+            PlayButtonSfx();
+
             if (m_ModalMenu.activeSelf)
             {
                 m_ShowOptionsModal = false;
@@ -372,6 +383,8 @@ namespace UnityEngine.XR.Templates.AR
         /// </summary>
         public void ShowHideDebugPlane()
         {
+            PlayButtonSfx();
+
             m_VisualizePlanes = !m_VisualizePlanes;
             m_DebugPlaneSlider.value = m_VisualizePlanes ? 1 : 0;
             ChangePlaneVisibility(m_VisualizePlanes);
@@ -382,6 +395,8 @@ namespace UnityEngine.XR.Templates.AR
         /// </summary>
         public void ShowHideDebugMenu()
         {
+            PlayButtonSfx();
+
             m_ShowDebugMenu = !m_ShowDebugMenu;
             m_DebugMenuSlider.value = m_ShowDebugMenu ? 1 : 0;
 
@@ -414,6 +429,8 @@ namespace UnityEngine.XR.Templates.AR
         /// </summary>
         public void ClearAllObjects()
         {
+            PlayButtonSfx();
+
             foreach (Transform child in m_ObjectSpawner.transform)
             {
                 Destroy(child.gameObject);
@@ -451,6 +468,8 @@ namespace UnityEngine.XR.Templates.AR
 
         void DeleteFocusedObject()
         {
+            PlayButtonSfx();
+
             var currentFocusedObject = m_InteractionGroup.focusInteractable;
             if (currentFocusedObject != null)
             {

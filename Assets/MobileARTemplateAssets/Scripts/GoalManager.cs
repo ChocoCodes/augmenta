@@ -38,6 +38,11 @@ namespace UnityEngine.XR.Templates.AR
     /// </summary>
     public class GoalManager : MonoBehaviour
     {
+        static void PlayButtonSfx()
+        {
+            AudioManager.GetInstance()?.PlayBtnSfx();
+        }
+
         /// <summary>
         /// State representation for the onboarding goals for the GoalManager.
         /// </summary>
@@ -259,6 +264,7 @@ namespace UnityEngine.XR.Templates.AR
         /// </summary>
         public void ForceCompleteGoal()
         {
+            PlayButtonSfx();
             CompleteGoal();
         }
 
@@ -276,6 +282,8 @@ namespace UnityEngine.XR.Templates.AR
         /// </summary>
         public void StartCoaching()
         {
+            PlayButtonSfx();
+
             if (m_OnboardingGoals != null)
             {
                 m_OnboardingGoals.Clear();
