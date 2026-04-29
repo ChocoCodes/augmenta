@@ -392,7 +392,6 @@ public class UIManager : MonoBehaviour
     public void ReturnToMainMenu()
     {
         PlayButtonSfx();
-
         matchEnded = false;
         Time.timeScale = 1f;
 
@@ -406,6 +405,7 @@ public class UIManager : MonoBehaviour
             losePanel.SetActive(false);
 
         SceneManager.LoadScene("MainMenu");
+        GetAudioManager().PlayAudio(bgm, true);
 
         if (inGamePanel != null)
             inGamePanel.SetActive(false);
