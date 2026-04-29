@@ -6143,18 +6143,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e45aa879dda01a44a8041ef3568c5c4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
-  mainMenuPanel: {fileID: 835594731}
-  gamePanel: {fileID: 240289717}
-  opponentSelectPanel: {fileID: 825777815}
+  mainMenuPanel: {fileID: 0}
+  gamePanel: {fileID: 0}
+  opponentSelectPanel: {fileID: 0}
   inGamePanel: {fileID: 1326514175}
-  midasButton: {fileID: 1271987360}
-  metroButton: {fileID: 782552653}
-  zeusButton: {fileID: 1005504574}
-  twinButton: {fileID: 1778842954}
-  midasImage: {fileID: 1271987361}
-  metroImage: {fileID: 782552654}
-  zeusImage: {fileID: 1005504575}
-  twinImage: {fileID: 1778842955}
+  pausePanel: {fileID: 0}
+  winPanel: {fileID: 0}
+  losePanel: {fileID: 0}
+  joystickPanel: {fileID: 0}
+  midasButton: {fileID: 0}
+  metroButton: {fileID: 0}
+  zeusButton: {fileID: 0}
+  twinButton: {fileID: 0}
+  midasImage: {fileID: 0}
+  metroImage: {fileID: 0}
+  zeusImage: {fileID: 0}
+  twinImage: {fileID: 0}
   midasOpenSprite: {fileID: 21300000, guid: 22b9555bf1bb6594a9a3c4fb36bc07e8, type: 3}
   midasDefeatedSprite: {fileID: 21300000, guid: 8888c33b51b360e438d979a0d40c2d63, type: 3}
   metroLockedSprite: {fileID: 21300000, guid: b6190782cf70f3f4c8991534733f6114, type: 3}

@@ -37,6 +37,20 @@ public class ARPlacementManager : MonoBehaviour
     private bool placementPoseIsValid = false;
     private bool arenaPlaced = false;
     private Camera arCamera;
+    private bool loggedMissingDeps = false;
+    private bool loggedNoRaycast = false;
+    private float lastStateLogTime = -1f;
+    private bool planeDetectionRequested = false;
+
+    private void OnEnable()
+    {
+        ARSession.stateChanged += HandleARSessionStateChanged;
+    }
+
+    private void OnDisable()
+    {
+        ARSession.stateChanged -= HandleARSessionStateChanged;
+    }
 
     void Awake()
     {
@@ -45,17 +59,23 @@ public class ARPlacementManager : MonoBehaviour
 
     void Start()
     {
+        raycastManager = FindInSameScene<ARRaycastManager>();
+        planeManager = FindInSameScene<ARPlaneManager>();
+        arCamera = FindCameraInSameScene();
 
-        raycastManager = FindFirstObjectByType<ARRaycastManager>();
-        planeManager = FindFirstObjectByType<ARPlaneManager>();
-        arCamera = Camera.main;
+        Debug.Log($"[ARPlacement] Scene={gameObject.scene.name} | RaycastManager={(raycastManager != null)} | PlaneManager={(planeManager != null)} | Camera={(arCamera != null ? arCamera.name : "null")}");
+        if (planeManager != null)
+        {
+            Debug.Log($"[ARPlacement] PlaneManager enabled={planeManager.enabled} | requestedDetectionMode={planeManager.requestedDetectionMode} | currentDetectionMode={planeManager.currentDetectionMode}");
+            EnsurePlaneDetection();
+        }
         
         if (uiManager != null)
         {
             uiManager.GetAudioManager().PlayAudio(uiManager.GetGameBgm(), true);
         }
 
-        if (arCamera == null) arCamera = FindFirstObjectByType<Camera>();
+        if (arCamera == null) arCamera = Camera.main;
 
         // Explicitly set plane detection to only Horizontal to ignore walls
         if (planeManager != null)
@@ -69,6 +89,43 @@ public class ARPlacementManager : MonoBehaviour
         }
 
         if (placementIndicator != null) placementIndicator.SetActive(false);
+    }
+
+    private T FindInSameScene<T>() where T : Component
+    {
+        T[] candidates = FindObjectsByType<T>(FindObjectsSortMode.None);
+        foreach (T candidate in candidates)
+        {
+            if (candidate != null && candidate.gameObject.scene == gameObject.scene)
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private Camera FindCameraInSameScene()
+    {
+        Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+        Camera firstInScene = null;
+
+        foreach (Camera camera in cameras)
+        {
+            if (camera == null || camera.gameObject.scene != gameObject.scene) continue;
+
+            if (camera.CompareTag("MainCamera"))
+            {
+                return camera;
+            }
+
+            if (firstInScene == null)
+            {
+                firstInScene = camera;
+            }
+        }
+
+        return firstInScene;
     }
 
     void Update()
@@ -156,7 +213,20 @@ public class ARPlacementManager : MonoBehaviour
         if (raycastManager == null || arCamera == null)
         {
             placementPoseIsValid = false;
+            if (!loggedMissingDeps)
+            {
+                Debug.LogWarning($"[ARPlacement] Missing deps | RaycastManager={(raycastManager != null)} | PlaneManager={(planeManager != null)} | Camera={(arCamera != null)}");
+                loggedMissingDeps = true;
+            }
             return;
+        }
+
+        if (Time.unscaledTime - lastStateLogTime > 2f)
+        {
+            lastStateLogTime = Time.unscaledTime;
+            int planeCount = planeManager != null ? planeManager.trackables.count : 0;
+            Debug.Log($"[ARPlacement] ARSession state={ARSession.state} | planes={planeCount}");
+            EnsurePlaneDetection();
         }
 
         var screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
@@ -165,6 +235,7 @@ public class ARPlacementManager : MonoBehaviour
         // Raycast against planes (using PlaneWithinPolygon for better accuracy)
         if (raycastManager.Raycast(screenCenter, hits, TrackableType.PlaneWithinPolygon))
         {
+            loggedNoRaycast = false;
             bool foundHorizontal = false;
             foreach (var hit in hits)
             {
@@ -200,6 +271,33 @@ public class ARPlacementManager : MonoBehaviour
         else
         {
             placementPoseIsValid = false;
+            if (!loggedNoRaycast)
+            {
+                int planeCount = planeManager != null ? planeManager.trackables.count : 0;
+                Debug.LogWarning($"[ARPlacement] Raycast hit count is 0. planes={planeCount}");
+                loggedNoRaycast = true;
+            }
+        }
+    }
+
+    private void HandleARSessionStateChanged(ARSessionStateChangedEventArgs args)
+    {
+        Debug.Log($"[ARPlacement] ARSession state changed: {args.state}");
+        EnsurePlaneDetection();
+    }
+
+    private void EnsurePlaneDetection()
+    {
+        if (planeManager == null || planeDetectionRequested) return;
+
+        if (ARSession.state == ARSessionState.Ready ||
+            ARSession.state == ARSessionState.SessionInitializing ||
+            ARSession.state == ARSessionState.SessionTracking)
+        {
+            planeManager.enabled = true;
+            planeManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
+            planeDetectionRequested = true;
+            Debug.Log("[ARPlacement] Plane detection requested (Horizontal).");
         }
     }
 

@@ -1,10 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
+
+    private const string ArPlacementSceneName = "ARPlacement";
 
     [Header("Panel References")]
     [SerializeField] private GameObject mainMenuPanel;
@@ -66,6 +69,16 @@ public class UIManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
     private void PlayButtonSfx()
     {
         GetAudioManager().PlayBtnSfx();
@@ -82,6 +95,21 @@ public class UIManager : MonoBehaviour
         // Reset state for new fights
         matchEnded = false;
         Debug.Log($"[UIManager] Panels registered for {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+    }
+
+    public void RegisterMainPanel(GameObject panel)
+    {
+        mainMenuPanel = panel;
+    }
+
+    public void RegisterGamePanel(GameObject panel)
+    {
+        gamePanel = panel;
+    }
+
+    public void RegisterOpponentPanel(GameObject panel)
+    {
+        opponentSelectPanel = panel;
     }
 
 
@@ -108,13 +136,129 @@ public class UIManager : MonoBehaviour
         if (losePanel != null)
             losePanel.SetActive(false);
 
-        if (mainMenuPanel != null)
+        if (SceneManager.GetActiveScene().name == "MainMenu")
+        {
+            RebindMainMenuPanels();
+            ApplyMainMenuState();
+        }
+        else if (mainMenuPanel != null)
+        {
             mainMenuPanel.SetActive(true);
+        }
 
         GetAudioManager().PlayAudio(bgm, true);
 
         RefreshOpponentSelectState();
         UpdateJoystickVisibility();
+    }
+
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "MainMenu")
+        {
+            RebindMainMenuPanels();
+            ApplyMainMenuState();
+        }
+        else
+        {
+            ClearMainMenuPanels();
+        }
+    }
+
+    private void RebindMainMenuPanels()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        mainMenuPanel = FindPanelInScene(activeScene, "MainMenu");
+        opponentSelectPanel = FindPanelInScene(activeScene, "OpponentSelect");
+        gamePanel = FindPanelInScene(activeScene, "GameModeSelect");
+    }
+
+    private void ClearMainMenuPanels()
+    {
+        mainMenuPanel = null;
+        opponentSelectPanel = null;
+        gamePanel = null;
+    }
+
+    private void ApplyMainMenuState()
+    {
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(true);
+
+        if (opponentSelectPanel != null)
+            opponentSelectPanel.SetActive(false);
+
+        if (gamePanel != null)
+            gamePanel.SetActive(false);
+
+        RefreshOpponentSelectState();
+        RebindMainMenuButtons();
+    }
+
+    private void RebindMainMenuButtons()
+    {
+        if (mainMenuPanel != null)
+        {
+            BindButtonByName(mainMenuPanel, "Start", StartGame);
+            BindButtonByName(mainMenuPanel, "Exit", ExitGame);
+        }
+
+        if (gamePanel != null)
+        {
+            BindButtonByName(gamePanel, "Career", OpenOpponentSelect);
+        }
+
+        if (opponentSelectPanel != null)
+        {
+            BindButtonByName(opponentSelectPanel, "Midas", () => NextScene("vsMidas"));
+            BindButtonByName(opponentSelectPanel, "Metro", () => NextScene("vsMetro"));
+            BindButtonByName(opponentSelectPanel, "Twin", () => NextScene("vsTwin"));
+            BindButtonByName(opponentSelectPanel, "Zeus", () => NextScene("vsZeus"));
+        }
+    }
+
+    private static void BindButtonByName(GameObject root, string targetName, UnityAction action)
+    {
+        if (root == null) return;
+
+        Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+        foreach (Transform child in transforms)
+        {
+            if (child.name != targetName) continue;
+
+            Button button = child.GetComponent<Button>();
+            if (button == null) return;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(action);
+            return;
+        }
+    }
+
+    private static GameObject FindPanelInScene(Scene scene, params string[] names)
+    {
+        if (!scene.IsValid())
+        {
+            return null;
+        }
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        foreach (GameObject root in roots)
+        {
+            Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in transforms)
+            {
+                foreach (string name in names)
+                {
+                    if (child.name == name)
+                    {
+                        return child.gameObject;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
 
@@ -166,7 +310,7 @@ public class UIManager : MonoBehaviour
     {
         PlayButtonSfx();
 
-        SceneManager.LoadScene("vsMidas");
+        NextScene("vsMidas");
 
         UpdateJoystickVisibility();
     }
@@ -294,7 +438,13 @@ public class UIManager : MonoBehaviour
 
         matchEnded = false;
         Time.timeScale = 1f;
-        SceneManager.LoadScene(sceneName);
+        if (SceneManager.GetActiveScene().name == ArPlacementSceneName)
+        {
+            SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
+            return;
+        }
+
+        SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
     }
 
     private void RefreshOpponentSelectState()
