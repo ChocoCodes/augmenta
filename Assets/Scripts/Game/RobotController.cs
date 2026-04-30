@@ -439,7 +439,6 @@ public class RobotController : MonoBehaviour
         {
             isDead = true;
             TriggerKnockout();
-            Debug.Log("[RobotController] Player died -> invoking Died event");
             Died?.Invoke();
         }
         else

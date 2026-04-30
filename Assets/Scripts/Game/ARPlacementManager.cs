@@ -22,7 +22,7 @@ public class ARPlacementManager : MonoBehaviour
     [SerializeField] private Slider enemyHealthSlider;
     [SerializeField] private float knockoutPanelDelay = 5.0f;
 
-    private UIManager uiManager;
+    private InGameUIManager uiManager;
 
     [Header("Events")]
     public RobotPlacedEvent OnRobotPlaced;
@@ -38,22 +38,13 @@ public class ARPlacementManager : MonoBehaviour
     private bool arenaPlaced = false;
     private Camera arCamera;
 
-    void Awake()
-    {
-        uiManager = UIManager.Instance;
-    }
-
     void Start()
     {
 
         raycastManager = FindFirstObjectByType<ARRaycastManager>();
         planeManager = FindFirstObjectByType<ARPlaneManager>();
+        uiManager = FindFirstObjectByType<InGameUIManager>();
         arCamera = Camera.main;
-        
-        if (uiManager != null)
-        {
-            uiManager.GetAudioManager().PlayAudio(uiManager.GetGameBgm(), true);
-        }
 
         if (arCamera == null) arCamera = FindFirstObjectByType<Camera>();
 
@@ -107,19 +98,16 @@ public class ARPlacementManager : MonoBehaviour
 
     private void OnPlayerDied()
     {
-        Debug.Log("[ARPlacement] OnPlayerDied received");
         QueueResultPanel(showWin: false);
     }
 
     private void OnEnemyDied()
     {
-        Debug.Log("[ARPlacement] OnEnemyDied received");
         QueueResultPanel(showWin: true);
     }
 
     private void QueueResultPanel(bool showWin)
     {
-        Debug.Log($"[ARPlacement] QueueResultPanel called | showWin={showWin} | uiManagerNull={uiManager == null} | alreadyQueued={resultPanelQueued}");
         if (uiManager == null || resultPanelQueued) return;
 
         resultPanelQueued = true;
@@ -129,13 +117,11 @@ public class ARPlacementManager : MonoBehaviour
     private System.Collections.IEnumerator ShowResultPanelAfterDelay(bool showWin)
     {
         float delay = Mathf.Max(0f, knockoutPanelDelay);
-        Debug.Log($"[ARPlacement] ShowResultPanelAfterDelay started | showWin={showWin} | delay={delay:F2}s");
         if (delay > 0f)
         {
             yield return new WaitForSeconds(delay);
         }
 
-        Debug.Log($"[ARPlacement] Delay finished | invoking {(showWin ? "ShowWinPanel" : "ShowLosePanel")}");
         if (uiManager != null)
         {
             if (showWin) uiManager.ShowWinPanel();
@@ -268,16 +254,13 @@ public class ARPlacementManager : MonoBehaviour
 
         if (uiManager != null)
         {
-            Debug.Log($"[ARPlacement] UIManager found: {uiManager.name}");
             if (playerController != null)
             {
-                Debug.Log($"[ARPlacement] Subscribing player died: {(playerController != null)}");
                 playerController.Died += OnPlayerDied;
             }
 
             if (enemyAI != null)
             {
-                Debug.Log($"[ARPlacement] Subscribing enemy died: {(enemyAI != null)}");
                 enemyAI.Died += OnEnemyDied;
             }
         }

@@ -4,19 +4,10 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    public static UIManager Instance { get; private set; }
-
     [Header("Panel References")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject gamePanel;
     [SerializeField] private GameObject opponentSelectPanel;
-    [SerializeField] private GameObject inGamePanel;
-
-    [Header("Scene Specific (Runtime Assignment)")]
-    [SerializeField] private GameObject pausePanel;
-    [SerializeField] private GameObject winPanel;
-    [SerializeField] private GameObject losePanel;
-    [SerializeField] private GameObject joystickPanel;
 
     [Header("Opponent Select Buttons")]
     [SerializeField] private Button midasButton;
@@ -45,46 +36,13 @@ public class UIManager : MonoBehaviour
 
     [Header("SFX")]
     [SerializeField] private AudioClip bgm;
-    [SerializeField] private AudioClip gameStartSfx; // Bell Ring
-    [SerializeField] private AudioClip gameBgm; // Crowd Cheer
-
-    private bool matchEnded = false;
 
     public AudioManager GetAudioManager() => AudioManager.GetInstance();
-    public AudioClip GetGameStartSfx() => gameStartSfx;
-    public AudioClip GetGameBgm() => gameBgm;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
 
     private void PlayButtonSfx()
     {
         GetAudioManager().PlayBtnSfx();
     }
-
-    // Sync Persistent UIManager to the Panels that will be used in-game
-    public void RegisterGamePanels(GameObject win, GameObject lose, GameObject pause, GameObject joystick)
-    {
-        winPanel = win;
-        losePanel = lose;
-        pausePanel = pause;
-        joystickPanel = joystick;
-
-        // Reset state for new fights
-        matchEnded = false;
-        Debug.Log($"[UIManager] Panels registered for {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
-    }
-
-
 
     void Start()
     {
@@ -96,27 +54,13 @@ public class UIManager : MonoBehaviour
         if (opponentSelectPanel != null)
             opponentSelectPanel.SetActive(false);
 
-        if (inGamePanel != null)
-            inGamePanel.SetActive(false);
-
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (winPanel != null)
-            winPanel.SetActive(false);
-
-        if (losePanel != null)
-            losePanel.SetActive(false);
-
         if (mainMenuPanel != null)
             mainMenuPanel.SetActive(true);
 
         GetAudioManager().PlayAudio(bgm, true);
 
         RefreshOpponentSelectState();
-        UpdateJoystickVisibility();
     }
-
 
     public void StartGame(GameObject panelToClose, GameObject panelToOpen)
     {
@@ -155,144 +99,16 @@ public class UIManager : MonoBehaviour
         PlayButtonSfx();
 
         #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
+                UnityEditor.EditorApplication.isPlaying = false;
         #else
-            Application.Quit();
+                Application.Quit();
         #endif
-    }
-
-    //NOT FINAL. IN GAME SHOULD BE IN ANOTHER SCENE. FOR DEMO PURPOSES
-    public void OpenInGamePanel()
-    {
-        PlayButtonSfx();
-
-        SceneManager.LoadScene("vsMidas");
-
-        UpdateJoystickVisibility();
-    }
-
-    public void ShowPausePanel()
-    {
-        if (matchEnded) return;
-
-        PlayButtonSfx();
-
-        if (pausePanel != null)
-            pausePanel.SetActive(true);
-
-        Time.timeScale = 0f;
-        UpdateJoystickVisibility();
-    }
-
-    public void HidePausePanel()
-    {
-        if (matchEnded) return;
-
-        PlayButtonSfx();
-
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        Time.timeScale = 1f;
-        UpdateJoystickVisibility();
-    }
-
-    public void ShowWinPanel()
-    {
-        if (matchEnded) return;
-
-        CareerProgression.MarkWinForScene(SceneManager.GetActiveScene().name);
-        RefreshOpponentSelectState();
-
-        matchEnded = true;
-
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (winPanel != null)
-            winPanel.SetActive(true);
-
-        if (losePanel != null)
-            losePanel.SetActive(false);
-
-        UpdateJoystickVisibility();
-    }
-
-    public void ShowLosePanel()
-    {
-        Debug.Log($"[UIManager] Match ended: {matchEnded} | Lose Panel is null: {losePanel == null} | GameObject: {gameObject.name}, {GetInstanceID()}");
-        if (matchEnded) return;
-
-        if (losePanel == null)
-        {
-            Debug.LogError("[UIManager] Lose Panel is not assigned in the Inspector for this scene!");
-            return;
-        }
-
-        matchEnded = true;
-
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (losePanel != null)
-            losePanel.SetActive(true);
-            Debug.Log($"[UIManager] activeSelf: {losePanel.activeSelf}");
-            Debug.Log($"[UIManager] activeInHierarchy: {losePanel.activeInHierarchy}");
-
-        if (winPanel != null)
-            winPanel.SetActive(false);
-
-        UpdateJoystickVisibility();
-    }
-
-    public void ReturnToMainMenu()
-    {
-        PlayButtonSfx();
-
-        matchEnded = false;
-        Time.timeScale = 1f;
-
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (winPanel != null)
-            winPanel.SetActive(false);
-
-        if (losePanel != null)
-            losePanel.SetActive(false);
-
-        SceneManager.LoadScene("MainMenu");
-
-        if (inGamePanel != null)
-            inGamePanel.SetActive(false);
-
-        if (opponentSelectPanel != null)
-            opponentSelectPanel.SetActive(false);
-
-        if (gamePanel != null)
-            gamePanel.SetActive(false);
-
-        if (mainMenuPanel != null)
-            mainMenuPanel.SetActive(true);
-
-        UpdateJoystickVisibility();
-    }
-
-    public void ReloadScene()
-    {
-        PlayButtonSfx();
-
-        matchEnded = false;
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        //SceneManager.LoadScene("vsMetro");
     }
 
     public void NextScene(string sceneName)
     {
         PlayButtonSfx();
 
-        matchEnded = false;
         Time.timeScale = 1f;
         SceneManager.LoadScene(sceneName);
     }
@@ -385,17 +201,5 @@ public class UIManager : MonoBehaviour
         {
             image.sprite = openSprite;
         }
-    }
-
-    private void UpdateJoystickVisibility()
-    {
-        if (joystickPanel == null) return;
-
-        bool isOverlayVisible =
-            (pausePanel != null && pausePanel.activeInHierarchy) ||
-            (winPanel != null && winPanel.activeInHierarchy) ||
-            (losePanel != null && losePanel.activeInHierarchy);
-
-        joystickPanel.SetActive(!isOverlayVisible);
     }
 }
