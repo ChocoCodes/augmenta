@@ -22,7 +22,7 @@ public class ARPlacementManager : MonoBehaviour
     [SerializeField] private Slider enemyHealthSlider;
     [SerializeField] private float knockoutPanelDelay = 5.0f;
 
-    private UIManager uiManager;
+    private InGameUIManager uiManager;
 
     [Header("Events")]
     public RobotPlacedEvent OnRobotPlaced;
@@ -43,13 +43,8 @@ public class ARPlacementManager : MonoBehaviour
 
         raycastManager = FindFirstObjectByType<ARRaycastManager>();
         planeManager = FindFirstObjectByType<ARPlaneManager>();
-        uiManager = FindFirstObjectByType<UIManager>();
+        uiManager = FindFirstObjectByType<InGameUIManager>();
         arCamera = Camera.main;
-        
-        if (uiManager != null)
-        {
-            uiManager.GetAudioManager().PlayAudio(uiManager.GetGameBgm(), true);
-        }
 
         if (arCamera == null) arCamera = FindFirstObjectByType<Camera>();
 

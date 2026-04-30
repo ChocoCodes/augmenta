@@ -360,7 +360,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 87329491}
-  - component: {fileID: 87329490}
+  - component: {fileID: 87329492}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -368,26 +368,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &87329490
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 87329489}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e45aa879dda01a44a8041ef3568c5c4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIManager
-  mainMenuPanel: {fileID: 0}
-  gamePanel: {fileID: 0}
-  opponentSelectPanel: {fileID: 0}
-  inGamePanel: {fileID: 0}
-  pausePanel: {fileID: 1974311342}
-  winPanel: {fileID: 1082307955}
-  losePanel: {fileID: 1209296432}
-  joystickPanel: {fileID: 1328229295}
 --- !u!4 &87329491
 Transform:
   m_ObjectHideFlags: 0
@@ -403,6 +383,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &87329492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 87329489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dcd773462eaef44786ac8f8648cefb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGameUIManager
+  pausePanel: {fileID: 1974311342}
+  winPanel: {fileID: 1082307955}
+  losePanel: {fileID: 1209296432}
+  joystickPanel: {fileID: 1328229295}
+  gameStartSfx: {fileID: 8300000, guid: 43f493a811766ff4b92a3af5797e1abd, type: 3}
+  gameBgm: {fileID: 8300000, guid: fdc926f1a86146547ac5ca02d9e43102, type: 3}
 --- !u!1 &136656418
 GameObject:
   m_ObjectHideFlags: 0
@@ -2231,8 +2229,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ShowPausePanel
         m_Mode: 1
         m_Arguments:
@@ -5166,8 +5164,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReturnToMainMenu
         m_Mode: 1
         m_Arguments:
@@ -6412,8 +6410,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: NextScene
         m_Mode: 5
         m_Arguments:
@@ -8204,8 +8202,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReloadScene
         m_Mode: 1
         m_Arguments:
@@ -8717,8 +8715,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReturnToMainMenu
         m_Mode: 1
         m_Arguments:
@@ -8849,8 +8847,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: HidePausePanel
         m_Mode: 1
         m_Arguments:
@@ -10598,8 +10596,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 87329490}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 87329492}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReturnToMainMenu
         m_Mode: 1
         m_Arguments:

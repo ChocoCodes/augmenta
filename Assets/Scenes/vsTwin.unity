@@ -752,8 +752,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ShowPausePanel
         m_Mode: 1
         m_Arguments:
@@ -1868,8 +1868,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReloadScene
         m_Mode: 1
         m_Arguments:
@@ -2275,8 +2275,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReturnToMainMenu
         m_Mode: 1
         m_Arguments:
@@ -3786,7 +3786,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 802709085}
-  - component: {fileID: 802709084}
+  - component: {fileID: 802709086}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -3794,45 +3794,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &802709084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 802709083}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e45aa879dda01a44a8041ef3568c5c4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIManager
-  mainMenuPanel: {fileID: 0}
-  gamePanel: {fileID: 0}
-  opponentSelectPanel: {fileID: 0}
-  inGamePanel: {fileID: 0}
-  pausePanel: {fileID: 824798863}
-  winPanel: {fileID: 1393498733}
-  losePanel: {fileID: 1140600167}
-  joystickPanel: {fileID: 2047554587}
-  midasButton: {fileID: 0}
-  metroButton: {fileID: 0}
-  zeusButton: {fileID: 0}
-  twinButton: {fileID: 0}
-  midasImage: {fileID: 0}
-  metroImage: {fileID: 0}
-  zeusImage: {fileID: 0}
-  twinImage: {fileID: 0}
-  midasOpenSprite: {fileID: 0}
-  midasDefeatedSprite: {fileID: 0}
-  metroLockedSprite: {fileID: 0}
-  metroOpenSprite: {fileID: 0}
-  metroDefeatedSprite: {fileID: 0}
-  twinLockedSprite: {fileID: 0}
-  twinOpenSprite: {fileID: 0}
-  twinDefeatedSprite: {fileID: 0}
-  zeusLockedSprite: {fileID: 0}
-  zeusOpenSprite: {fileID: 0}
-  zeusDefeatedSprite: {fileID: 0}
 --- !u!4 &802709085
 Transform:
   m_ObjectHideFlags: 0
@@ -3848,6 +3809,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &802709086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 802709083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dcd773462eaef44786ac8f8648cefb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGameUIManager
+  pausePanel: {fileID: 824798863}
+  winPanel: {fileID: 1393498733}
+  losePanel: {fileID: 1140600167}
+  joystickPanel: {fileID: 2047554587}
+  gameStartSfx: {fileID: 8300000, guid: 43f493a811766ff4b92a3af5797e1abd, type: 3}
+  gameBgm: {fileID: 8300000, guid: fdc926f1a86146547ac5ca02d9e43102, type: 3}
 --- !u!1001 &805527811
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7097,8 +7076,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: NextScene
         m_Mode: 5
         m_Arguments:
@@ -7229,8 +7208,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReturnToMainMenu
         m_Mode: 1
         m_Arguments:
@@ -7963,8 +7942,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: HidePausePanel
         m_Mode: 1
         m_Arguments:
@@ -10686,8 +10665,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 802709084}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+      - m_Target: {fileID: 802709086}
+        m_TargetAssemblyTypeName: InGameUIManager, Assembly-CSharp
         m_MethodName: ReturnToMainMenu
         m_Mode: 1
         m_Arguments:
