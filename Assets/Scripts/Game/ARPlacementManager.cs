@@ -22,7 +22,11 @@ public class ARPlacementManager : MonoBehaviour
     [SerializeField] private Slider enemyHealthSlider;
     [SerializeField] private float knockoutPanelDelay = 5.0f;
 
-    private UIManager uiManager;
+    [Header("Spawn Settings")]
+    [SerializeField] private float spawnOffset = 0.25f;
+    [SerializeField] private float spawnHeightOffset = 0.05f;
+
+    private InGameUIManager uiManager;
 
     [Header("Events")]
     public RobotPlacedEvent OnRobotPlaced;
@@ -37,45 +41,16 @@ public class ARPlacementManager : MonoBehaviour
     private bool placementPoseIsValid = false;
     private bool arenaPlaced = false;
     private Camera arCamera;
-    private bool loggedMissingDeps = false;
-    private bool loggedNoRaycast = false;
-    private float lastStateLogTime = -1f;
-    private bool planeDetectionRequested = false;
-
-    private void OnEnable()
-    {
-        ARSession.stateChanged += HandleARSessionStateChanged;
-    }
-
-    private void OnDisable()
-    {
-        ARSession.stateChanged -= HandleARSessionStateChanged;
-    }
-
-    void Awake()
-    {
-        uiManager = UIManager.Instance;
-    }
 
     void Start()
     {
-        raycastManager = FindInSameScene<ARRaycastManager>();
-        planeManager = FindInSameScene<ARPlaneManager>();
-        arCamera = FindCameraInSameScene();
 
-        Debug.Log($"[ARPlacement] Scene={gameObject.scene.name} | RaycastManager={(raycastManager != null)} | PlaneManager={(planeManager != null)} | Camera={(arCamera != null ? arCamera.name : "null")}");
-        if (planeManager != null)
-        {
-            Debug.Log($"[ARPlacement] PlaneManager enabled={planeManager.enabled} | requestedDetectionMode={planeManager.requestedDetectionMode} | currentDetectionMode={planeManager.currentDetectionMode}");
-            EnsurePlaneDetection();
-        }
-        
-        if (uiManager != null)
-        {
-            uiManager.GetAudioManager().PlayAudio(uiManager.GetGameBgm(), true);
-        }
+        raycastManager = FindFirstObjectByType<ARRaycastManager>();
+        planeManager = FindFirstObjectByType<ARPlaneManager>();
+        uiManager = FindFirstObjectByType<InGameUIManager>();
+        arCamera = Camera.main;
 
-        if (arCamera == null) arCamera = Camera.main;
+        if (arCamera == null) arCamera = FindFirstObjectByType<Camera>();
 
         // Explicitly set plane detection to only Horizontal to ignore walls
         if (planeManager != null)
@@ -89,43 +64,6 @@ public class ARPlacementManager : MonoBehaviour
         }
 
         if (placementIndicator != null) placementIndicator.SetActive(false);
-    }
-
-    private T FindInSameScene<T>() where T : Component
-    {
-        T[] candidates = FindObjectsByType<T>(FindObjectsSortMode.None);
-        foreach (T candidate in candidates)
-        {
-            if (candidate != null && candidate.gameObject.scene == gameObject.scene)
-            {
-                return candidate;
-            }
-        }
-
-        return null;
-    }
-
-    private Camera FindCameraInSameScene()
-    {
-        Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
-        Camera firstInScene = null;
-
-        foreach (Camera camera in cameras)
-        {
-            if (camera == null || camera.gameObject.scene != gameObject.scene) continue;
-
-            if (camera.CompareTag("MainCamera"))
-            {
-                return camera;
-            }
-
-            if (firstInScene == null)
-            {
-                firstInScene = camera;
-            }
-        }
-
-        return firstInScene;
     }
 
     void Update()
@@ -164,19 +102,16 @@ public class ARPlacementManager : MonoBehaviour
 
     private void OnPlayerDied()
     {
-        Debug.Log("[ARPlacement] OnPlayerDied received");
         QueueResultPanel(showWin: false);
     }
 
     private void OnEnemyDied()
     {
-        Debug.Log("[ARPlacement] OnEnemyDied received");
         QueueResultPanel(showWin: true);
     }
 
     private void QueueResultPanel(bool showWin)
     {
-        Debug.Log($"[ARPlacement] QueueResultPanel called | showWin={showWin} | uiManagerNull={uiManager == null} | alreadyQueued={resultPanelQueued}");
         if (uiManager == null || resultPanelQueued) return;
 
         resultPanelQueued = true;
@@ -186,13 +121,11 @@ public class ARPlacementManager : MonoBehaviour
     private System.Collections.IEnumerator ShowResultPanelAfterDelay(bool showWin)
     {
         float delay = Mathf.Max(0f, knockoutPanelDelay);
-        Debug.Log($"[ARPlacement] ShowResultPanelAfterDelay started | showWin={showWin} | delay={delay:F2}s");
         if (delay > 0f)
         {
             yield return new WaitForSeconds(delay);
         }
 
-        Debug.Log($"[ARPlacement] Delay finished | invoking {(showWin ? "ShowWinPanel" : "ShowLosePanel")}");
         if (uiManager != null)
         {
             if (showWin) uiManager.ShowWinPanel();
@@ -213,20 +146,7 @@ public class ARPlacementManager : MonoBehaviour
         if (raycastManager == null || arCamera == null)
         {
             placementPoseIsValid = false;
-            if (!loggedMissingDeps)
-            {
-                Debug.LogWarning($"[ARPlacement] Missing deps | RaycastManager={(raycastManager != null)} | PlaneManager={(planeManager != null)} | Camera={(arCamera != null)}");
-                loggedMissingDeps = true;
-            }
             return;
-        }
-
-        if (Time.unscaledTime - lastStateLogTime > 2f)
-        {
-            lastStateLogTime = Time.unscaledTime;
-            int planeCount = planeManager != null ? planeManager.trackables.count : 0;
-            Debug.Log($"[ARPlacement] ARSession state={ARSession.state} | planes={planeCount}");
-            EnsurePlaneDetection();
         }
 
         var screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
@@ -235,7 +155,6 @@ public class ARPlacementManager : MonoBehaviour
         // Raycast against planes (using PlaneWithinPolygon for better accuracy)
         if (raycastManager.Raycast(screenCenter, hits, TrackableType.PlaneWithinPolygon))
         {
-            loggedNoRaycast = false;
             bool foundHorizontal = false;
             foreach (var hit in hits)
             {
@@ -271,33 +190,6 @@ public class ARPlacementManager : MonoBehaviour
         else
         {
             placementPoseIsValid = false;
-            if (!loggedNoRaycast)
-            {
-                int planeCount = planeManager != null ? planeManager.trackables.count : 0;
-                Debug.LogWarning($"[ARPlacement] Raycast hit count is 0. planes={planeCount}");
-                loggedNoRaycast = true;
-            }
-        }
-    }
-
-    private void HandleARSessionStateChanged(ARSessionStateChangedEventArgs args)
-    {
-        Debug.Log($"[ARPlacement] ARSession state changed: {args.state}");
-        EnsurePlaneDetection();
-    }
-
-    private void EnsurePlaneDetection()
-    {
-        if (planeManager == null || planeDetectionRequested) return;
-
-        if (ARSession.state == ARSessionState.Ready ||
-            ARSession.state == ARSessionState.SessionInitializing ||
-            ARSession.state == ARSessionState.SessionTracking)
-        {
-            planeManager.enabled = true;
-            planeManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
-            planeDetectionRequested = true;
-            Debug.Log("[ARPlacement] Plane detection requested (Horizontal).");
         }
     }
 
@@ -332,17 +224,18 @@ public class ARPlacementManager : MonoBehaviour
             Debug.LogWarning("ARPlacementManager: Enemy health slider is not assigned.");
         }
 
-        Instantiate(arenaPrefab, placementPose.position, placementPose.rotation);
+        Instantiate(arenaPrefab, placementPose.position, placementPose.rotation * arenaPrefab.transform.rotation);
         
         // Arena is approx 1m x 1m. Spawn robots in opposite corners.
-        float offset = 0.35f; 
+        float offset = spawnOffset; 
         float arenaSize = 1.0f;
         
         Vector3 playerOffset = (placementPose.rotation * new Vector3(-offset, 0, -offset));
         Vector3 enemyOffset = (placementPose.rotation * new Vector3(offset, 0, offset));
 
-        Vector3 playerSpawnPos = placementPose.position + playerOffset + Vector3.up * 0.01f;
-        Vector3 enemySpawnPos = placementPose.position + enemyOffset + Vector3.up * 0.01f;
+        // Spawn slightly higher to ensure they are on top of the arena
+        Vector3 playerSpawnPos = placementPose.position + playerOffset + Vector3.up * spawnHeightOffset;
+        Vector3 enemySpawnPos = placementPose.position + enemyOffset + Vector3.up * spawnHeightOffset;
 
         // Spawn Player
         GameObject spawnedRobot = Instantiate(robotPrefab, playerSpawnPos, placementPose.rotation);
@@ -366,16 +259,13 @@ public class ARPlacementManager : MonoBehaviour
 
         if (uiManager != null)
         {
-            Debug.Log($"[ARPlacement] UIManager found: {uiManager.name}");
             if (playerController != null)
             {
-                Debug.Log($"[ARPlacement] Subscribing player died: {(playerController != null)}");
                 playerController.Died += OnPlayerDied;
             }
 
             if (enemyAI != null)
             {
-                Debug.Log($"[ARPlacement] Subscribing enemy died: {(enemyAI != null)}");
                 enemyAI.Died += OnEnemyDied;
             }
         }
