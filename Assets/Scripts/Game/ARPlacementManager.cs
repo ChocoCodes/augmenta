@@ -137,7 +137,13 @@ public class ARPlacementManager : MonoBehaviour
 
     private bool WasTapped()
     {
-        if (Pointer.current != null && Pointer.current.press.wasPressedThisFrame) return true;
+    #if UNITY_ANDROID && !UNITY_EDITOR
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+            return true;
+    #else
+        if (Pointer.current != null && Pointer.current.press.wasPressedThisFrame)
+            return true;
+    #endif
         return false;
     }
 

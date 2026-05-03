@@ -20,6 +20,10 @@ public class VoiceIntentProcessor : MonoBehaviour
             voiceService.VoiceEvents.OnResponse.AddListener(OnVoiceResponse);
             voiceService.VoiceEvents.OnStoppedListening.AddListener(OnStoppedListening);
             voiceService.VoiceEvents.OnError.AddListener(OnVoiceError);
+            voiceService.VoiceEvents.OnStartListening.AddListener(() => Debug.Log("Listening started"));
+            voiceService.VoiceEvents.OnMicDataSent.AddListener(() => Debug.Log("Audio sent to Wit.ai"));
+            voiceService.VoiceEvents.OnMinimumWakeThresholdHit.AddListener(() => Debug.Log("Sound detected"));
+            voiceService.VoiceEvents.OnAborted.AddListener(() => Debug.Log("Request aborted"));
         }
     }
 
@@ -44,7 +48,13 @@ public class VoiceIntentProcessor : MonoBehaviour
     private void StartListening()
     {
         if (!isActivated) return;
-        
+
+        if (voiceService == null)
+        {
+            Debug.LogError("VoiceService is NULL!");
+            return;
+        }
+
         if (voiceService != null && !voiceService.IsRequestActive)
         {
             Debug.Log("Voice Service: Starting to listen...");
