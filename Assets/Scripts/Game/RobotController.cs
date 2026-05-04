@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class RobotController : MonoBehaviour
@@ -445,7 +446,7 @@ public class RobotController : MonoBehaviour
         {
             TriggerHit();
         }
-
+        
         UpdateHealthUI();
     }
 
