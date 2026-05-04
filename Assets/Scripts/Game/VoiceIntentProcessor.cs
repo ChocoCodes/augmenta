@@ -1,149 +1,219 @@
 using UnityEngine;
-using Meta.WitAi;
-using Meta.WitAi.Json;
+using System.Collections;
 using System;
 
-public class VoiceIntentProcessor : MonoBehaviour
+public class VoiceIntentProcessor : MonoBehaviour, ISpeechToTextListener
 {
-    [Header("Voice Settings")]
-    [SerializeField] private VoiceService voiceService;
+    [Header("STT Settings")]
+    [SerializeField] private bool voiceControlEnabled = true;
+    [SerializeField] private string preferredLanguage = "en-US";
+    [SerializeField] private bool useOfflineRecognition = false;
+    [SerializeField] private float activationDelay = 0.05f;
     
     private RobotController robot;
     private bool isActivated = false;
+    private bool isInitialized = false;
+    private string lastTriggeredIntent = "";
 
-    private void OnEnable()
+    private void Start()
     {
-        if (voiceService == null) voiceService = FindFirstObjectByType<VoiceService>();
-        
-        if (voiceService != null)
+        if (!voiceControlEnabled) return;
+
+        // Initialize the STT service
+        try 
         {
-            voiceService.VoiceEvents.OnResponse.AddListener(OnVoiceResponse);
-            voiceService.VoiceEvents.OnStoppedListening.AddListener(OnStoppedListening);
-            voiceService.VoiceEvents.OnError.AddListener(OnVoiceError);
-            voiceService.VoiceEvents.OnStartListening.AddListener(() => Debug.Log("Listening started"));
-            voiceService.VoiceEvents.OnMicDataSent.AddListener(() => Debug.Log("Audio sent to Wit.ai"));
-            voiceService.VoiceEvents.OnMinimumWakeThresholdHit.AddListener(() => Debug.Log("Sound detected"));
-            voiceService.VoiceEvents.OnAborted.AddListener(() => Debug.Log("Request aborted"));
+            Debug.Log("STT: Initializing...");
+            if (SpeechToText.Initialize(preferredLanguage))
+            {
+                isInitialized = true;
+                Debug.Log("STT: Successfully initialized.");
+            }
+            else
+            {
+                Debug.LogError("STT: Failed to initialize. Check if the platform is supported.");
+            }
         }
-    }
-
-    private void OnDisable()
-    {
-        if (voiceService != null)
+        catch (Exception e)
         {
-            voiceService.VoiceEvents.OnResponse.RemoveListener(OnVoiceResponse);
-            voiceService.VoiceEvents.OnStoppedListening.RemoveListener(OnStoppedListening);
-            voiceService.VoiceEvents.OnError.RemoveListener(OnVoiceError);
+            Debug.LogError($"STT: Initialization exception: {e.Message}");
         }
     }
 
     public void ActivateVoiceControl(RobotController robotController)
     {
+        if (!voiceControlEnabled)
+        {
+            Debug.Log("STT: Voice control is disabled in the inspector.");
+            return;
+        }
+
+        if (robotController == null)
+        {
+            Debug.LogError("STT: Received null RobotController in ActivateVoiceControl!");
+            return;
+        }
+
         robot = robotController;
         isActivated = true;
-        Debug.Log($"<color=green>Voice Control Activated</color> for robot: {robot.name}");
-        StartListening();
+        
+        Debug.Log($"STT: Activating voice control for {robot.name}...");
+        StopAllCoroutines();
+        StartCoroutine(DelayedActivation());
+    }
+
+    private IEnumerator DelayedActivation()
+    {
+        if (activationDelay > 0)
+            yield return new WaitForSeconds(activationDelay);
+
+        if (!isInitialized)
+        {
+            Debug.LogWarning("STT: Cannot activate because initialization failed.");
+            yield break;
+        }
+
+        Debug.Log("STT: Requesting permissions...");
+        try
+        {
+            SpeechToText.RequestPermissionAsync((permission) => {
+                Debug.Log($"STT: Permission result = {permission}");
+                if (permission == SpeechToText.Permission.Granted)
+                {
+                    StartListening();
+                }
+                else
+                {
+                    Debug.LogError($"STT: Microphone permission {permission} denied.");
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"STT: Permission request exception: {e.Message}");
+        }
+    }
+
+    public void DeactivateVoiceControl()
+    {
+        isActivated = false;
+        StopAllCoroutines();
+        try
+        {
+            SpeechToText.Cancel();
+        }
+        catch (Exception e) { Debug.LogWarning($"STT: Cancel error: {e.Message}"); }
+        Debug.Log("STT: Deactivated");
     }
 
     private void StartListening()
     {
         if (!isActivated) return;
 
-        if (voiceService == null)
+        try
         {
-            Debug.LogError("VoiceService is NULL!");
-            return;
-        }
+            if (SpeechToText.IsBusy())
+            {
+                // If it's busy, try again very soon
+                Invoke(nameof(StartListening), 0.1f);
+                return;
+            }
 
-        if (voiceService != null && !voiceService.IsRequestActive)
+            lastTriggeredIntent = "";
+            Debug.Log("STT: Calling SpeechToText.Start()...");
+            SpeechToText.Start(this, useOfflineRecognition);
+        }
+        catch (Exception e)
         {
-            Debug.Log("Voice Service: Starting to listen...");
-            voiceService.Activate();
+            Debug.LogError($"STT: StartListening exception: {e.Message}");
         }
     }
 
-    private void OnStoppedListening()
+    #region ISpeechToTextListener Implementation
+
+    public void OnReadyForSpeech()
     {
-        // Continuous listening logic: Restart if we are still activated
+        Debug.Log("STT: System ready for speech");
+    }
+
+    public void OnBeginningOfSpeech()
+    {
+        Debug.Log("STT: User started speaking");
+    }
+
+    public void OnVoiceLevelChanged(float level) { }
+
+    public void OnPartialResultReceived(string text) 
+    {
+        if (!string.IsNullOrEmpty(text))
+        {
+            ProcessText(text.ToLower());
+        }
+    }
+
+    public void OnResultReceived(string text, int? errorCode)
+    {
+        if (errorCode.HasValue)
+        {
+            Debug.LogError($"STT: Received error code = {errorCode.Value}");
+            
+            if (isActivated)
+            {
+                Invoke(nameof(StartListening), 0.5f);
+            }
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(text))
+        {
+            Debug.Log($"STT: Final Result: <color=cyan>{text}</color>");
+            ProcessText(text.ToLower());
+        }
+
         if (isActivated)
         {
-            Debug.Log("Voice Service: Stopped listening. Restarting...");
-            Invoke(nameof(StartListening), 0.5f); // Slight delay for stability
+            // Use a very small delay to ensure the engine has fully stopped before restarting
+            Invoke(nameof(StartListening), 0.05f);
         }
     }
 
-    private void OnVoiceError(string error, string message)
+    #endregion
+
+    private void ProcessText(string text)
     {
-        Debug.LogError($"Voice Error: {error} - {message}");
-    }
+        if (robot == null) return;
 
-    private void OnVoiceResponse(WitResponseNode response)
-    {
-        if (response == null) return;
+        string intent = "";
+        if (text.Contains("jab") || text.Contains("one")) intent = "Jab";
+        else if (text.Contains("hook") || text.Contains("three")) intent = "Hook";
+        else if (text.Contains("uppercut") || text.Contains("two") || text.Contains("four")) intent = "Uppercut";
+        else if (text.Contains("cross")) intent = "Cross";
+        else if (text.Contains("block")) intent = "Block";
 
-        // Log the full response for debugging
-        Debug.Log($"Voice Response received: {response.ToString()}");
-
-        if (robot == null)
+        if (!string.IsNullOrEmpty(intent))
         {
-            Debug.LogWarning("Voice Response received but no robot controller is assigned!");
-            return;
-        }
+            // If we already triggered this intent in the current listening session, skip
+            if (intent == lastTriggeredIntent) return;
 
-        // Extract intent
-        string intent = response.GetIntentName();
-        string text = response["text"]?.Value?.ToLower();
-
-        // --- FALLBACK LOGIC ---
-        // If Wit.ai returns the text but failed to map it to an intent, we map it manually.
-        if (string.IsNullOrEmpty(intent) && !string.IsNullOrEmpty(text))
-        {
-            if (text.Contains("one")) intent = "Jab";
-            else if (text.Contains("two")) intent = "Uppercut";
-            else if (text.Contains("three")) intent = "Hook";
-            else if (text.Contains("four")) intent = "Uppercut";
-            
-            if (!string.IsNullOrEmpty(intent))
+            bool success = false;
+            switch (intent)
             {
-                Debug.Log($"<color=orange>Manual Text Fallback Match:</color> '{text}' -> {intent}");
+                case "Jab": success = robot.TriggerJab(); break;
+                case "Hook": success = robot.TriggerHook(); break;
+                case "Uppercut": success = robot.TriggerUppercut(); break;
+                case "Cross": success = robot.TriggerCross(); break;
+                case "Block": success = robot.TriggerBlock(); break;
+            }
+
+            if (success)
+            {
+                lastTriggeredIntent = intent;
+                Debug.Log($"STT: Action -> {intent} (Triggered)");
             }
         }
-        // ----------------------
+    }
 
-        if (string.IsNullOrEmpty(intent))
-        {
-            Debug.LogWarning($"Voice Response received but no intent detected for text: '{text}'");
-            return;
-        }
-
-        Debug.Log($"<color=cyan>Final Intent to Process:</color> {intent}");
-
-        // Map intents to robot actions (Case-insensitive comparison)
-        switch (intent.ToLower())
-        {
-            case "jab":
-                Debug.Log("Triggering Jab");
-                robot.TriggerJab();
-                break;
-            case "hook":
-                Debug.Log("Triggering Hook");
-                robot.TriggerHook();
-                break;
-            case "uppercut":
-                Debug.Log("Triggering Uppercut");
-                robot.TriggerUppercut();
-                break;
-            case "cross":
-                Debug.Log("Triggering Cross");
-                robot.TriggerCross();
-                break;
-            case "block":
-                Debug.Log("Triggering Block");
-                robot.TriggerBlock();
-                break;
-            default:
-                Debug.LogWarning($"Intent '{intent}' not mapped to any robot action.");
-                break;
-        }
+    private void OnDestroy()
+    {
+        DeactivateVoiceControl();
     }
 }

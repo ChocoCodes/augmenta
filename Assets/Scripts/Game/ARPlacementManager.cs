@@ -218,90 +218,84 @@ public class ARPlacementManager : MonoBehaviour
 
     private void PlaceObjects()
     {
-        if (arenaPrefab == null || robotPrefab == null || enemyPrefab == null) return;
-
-        if (playerHealthSlider == null)
+        try
         {
-            Debug.LogWarning("ARPlacementManager: Player health slider is not assigned.");
-        }
+            if (arenaPrefab == null || robotPrefab == null || enemyPrefab == null)
+            {
+                Debug.LogError("ARPlacementManager: One or more prefabs are missing!");
+                return;
+            }
 
-        if (enemyHealthSlider == null)
-        {
-            Debug.LogWarning("ARPlacementManager: Enemy health slider is not assigned.");
-        }
+            Debug.Log("ARPlacementManager: Instantiating Arena...");
+            Instantiate(arenaPrefab, placementPose.position, placementPose.rotation * arenaPrefab.transform.rotation);
+            
+            float offset = spawnOffset; 
+            float arenaSize = 1.0f;
+            
+            Vector3 playerOffset = (placementPose.rotation * new Vector3(-offset, 0, -offset));
+            Vector3 enemyOffset = (placementPose.rotation * new Vector3(offset, 0, offset));
 
-        Instantiate(arenaPrefab, placementPose.position, placementPose.rotation * arenaPrefab.transform.rotation);
-        
-        // Arena is approx 1m x 1m. Spawn robots in opposite corners.
-        float offset = spawnOffset; 
-        float arenaSize = 1.0f;
-        
-        Vector3 playerOffset = (placementPose.rotation * new Vector3(-offset, 0, -offset));
-        Vector3 enemyOffset = (placementPose.rotation * new Vector3(offset, 0, offset));
+            Vector3 playerSpawnPos = placementPose.position + playerOffset + Vector3.up * spawnHeightOffset;
+            Vector3 enemySpawnPos = placementPose.position + enemyOffset + Vector3.up * spawnHeightOffset;
 
-        // Spawn slightly higher to ensure they are on top of the arena
-        Vector3 playerSpawnPos = placementPose.position + playerOffset + Vector3.up * spawnHeightOffset;
-        Vector3 enemySpawnPos = placementPose.position + enemyOffset + Vector3.up * spawnHeightOffset;
-
-        // Spawn Player
-        GameObject spawnedRobot = Instantiate(robotPrefab, playerSpawnPos, placementPose.rotation);
-        RobotController playerController = spawnedRobot.GetComponent<RobotController>();
-        spawnedPlayerController = playerController;
-        if (playerController != null)
-        {
-            playerController.SetArenaContext(placementPose.position, arenaSize);
-            playerController.SetHealthSlider(playerHealthSlider);
-        }
-
-        // Spawn Enemy
-        GameObject spawnedEnemy = Instantiate(enemyPrefab, enemySpawnPos, placementPose.rotation * Quaternion.Euler(0, 180, 0));
-        EnemyAIController enemyAI = spawnedEnemy.GetComponent<EnemyAIController>();
-        spawnedEnemyController = enemyAI;
-        if (enemyAI != null)
-        {
-            enemyAI.SetArenaContext(placementPose.position, arenaSize);
-            enemyAI.SetHealthSlider(enemyHealthSlider);
-        }
-
-        if (uiManager != null)
-        {
+            Debug.Log("ARPlacementManager: Instantiating Player...");
+            GameObject spawnedRobot = Instantiate(robotPrefab, playerSpawnPos, placementPose.rotation);
+            RobotController playerController = spawnedRobot.GetComponent<RobotController>();
+            spawnedPlayerController = playerController;
+            
             if (playerController != null)
             {
-                playerController.Died += OnPlayerDied;
+                playerController.SetArenaContext(placementPose.position, arenaSize);
+                playerController.SetHealthSlider(playerHealthSlider);
             }
 
+            Debug.Log("ARPlacementManager: Instantiating Enemy...");
+            GameObject spawnedEnemy = Instantiate(enemyPrefab, enemySpawnPos, placementPose.rotation * Quaternion.Euler(0, 180, 0));
+            EnemyAIController enemyAI = spawnedEnemy.GetComponent<EnemyAIController>();
+            spawnedEnemyController = enemyAI;
+            
             if (enemyAI != null)
             {
-                enemyAI.Died += OnEnemyDied;
+                enemyAI.SetArenaContext(placementPose.position, arenaSize);
+                enemyAI.SetHealthSlider(enemyHealthSlider);
             }
-        }
-        else
-        {
-            Debug.LogWarning("ARPlacementManager: UIManager not found. Win/Lose panels will not be shown.");
-        }
 
-        // -----------------------------
-
-        if (placementIndicator != null) placementIndicator.SetActive(false);
-        arenaPlaced = true;
-        
-        if (planeManager != null)
-        {
-            planeManager.enabled = false;
-            foreach (var plane in planeManager.trackables)
+            if (uiManager != null)
             {
-                plane.gameObject.SetActive(false);
+                Debug.Log("ARPlacementManager: Setting up UI and Audio...");
+                if (playerController != null) playerController.Died += OnPlayerDied;
+                if (enemyAI != null) enemyAI.Died += OnEnemyDied;
+                
+                var audioManager = uiManager.GetAudioManager();
+                if (audioManager != null)
+                {
+                    audioManager.PlayAudio(uiManager.GetGameStartSfx());
+                }
             }
-        }
 
-        if (playerController != null)
-        {
-            OnRobotPlaced?.Invoke(playerController);
-        }
+            if (placementIndicator != null) placementIndicator.SetActive(false);
+            arenaPlaced = true;
+            
+            if (planeManager != null)
+            {
+                planeManager.enabled = false;
+                foreach (var plane in planeManager.trackables)
+                {
+                    plane.gameObject.SetActive(false);
+                }
+            }
 
-        if (uiManager != null)
+            if (playerController != null)
+            {
+                Debug.Log("ARPlacementManager: Invoking OnRobotPlaced...");
+                OnRobotPlaced?.Invoke(playerController);
+            }
+            
+            Debug.Log("ARPlacementManager: Placement sequence completed successfully.");
+        }
+        catch (System.Exception e)
         {
-            uiManager.GetAudioManager().PlayAudio(uiManager.GetGameStartSfx());
+            Debug.LogError($"ARPlacementManager: CRITICAL ERROR during placement: {e.Message}\n{e.StackTrace}");
         }
     }
 }
